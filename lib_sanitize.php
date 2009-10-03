@@ -13,6 +13,12 @@
 	# http://creativecommons.org/licenses/by-sa/2.5/
 	#
 
+	#
+	#
+	# !!!!!!!!!!!!!!!!!! DO NOT USE THIS - IT IS A WORK IN PROGRESS !!!!!!!!!!!!!!!!!!
+	#
+	#
+
 	##############################################################################
 
 	function sanitize($input, $type, $default=null, $more=null){
@@ -40,6 +46,7 @@
 				return sanitize_int64($input);
 
 			case 'html':
+				# this needs to do class_exists('lib_filter')
 				die("not implemented");
 			
 			case 'bool':
