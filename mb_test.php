@@ -3,6 +3,8 @@
 	include("test_harness.php");
 
 
+	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
+
 	#
 	# make sure we filter out bytes that are never valid UTF-8
 	#
@@ -77,6 +79,50 @@
 	test_string("a\xF0\x80\x80\x80b", "ab"); # lowest bad 4-byte
 	test_string("a\xF0\x8F\xBF\xBFb", "ab"); # lowest bad 4-byte
 	
+
+
+
+	#
+	# test the replacement mode
+	#
+
+	$GLOBALS[sanatize_mode]		= SANATIZE_INVALID_REPLACE;
+	$GLOBALS[sanatize_replace]	= ord('!');
+
+	test_string("hello\xC0world", "hello!world");
+	test_string("hello\xF5world", "hello!world");
+
+	test_string("a\x01b", "a\x01b");	# 0 leader w/ 0 trail
+	test_string("a\x01\xBFb", "a\x01b");	# 0 leader w/ 1 trail
+
+	test_string("a\xC2b", "ab");			# 1 leader w/ 0 trail
+	test_string("a\xC2\xBFb", "a\xC2\xBFb");	# 1 leader w/ 1 trail
+	test_string("a\xC2\xBF\xBFb", "a\xC2\xBFb");	# 1 leader w/ 2 trail
+
+	test_string("a\xE0b", "ab");				# 2 leader w/ 0 trail
+	test_string("a\xE0\xBFb", "ab");			# 2 leader w/ 1 trail
+	test_string("a\xE0\xBF\xBFb", "a\xE0\xBF\xBFb");	# 2 leader w/ 2 trail
+	test_string("a\xE0\xBF\xBF\xBFb", "a\xE0\xBF\xBFb");	# 2 leader w/ 3 trail
+
+	test_string("a\xF0b", "ab");					# 3 leader w/ 0 trail
+	test_string("a\xF0\xBFb", "ab");				# 3 leader w/ 1 trail
+	test_string("a\xF0\xBF\xBFb", "ab");				# 3 leader w/ 2 trail
+	test_string("a\xF0\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb");	# 3 leader w/ 3 trail
+	test_string("a\xF0\xBF\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb");	# 3 leader w/ 4 trail
+
+	test_string("a\xC0\x80b", "ab"); # lowest bad 2-byte
+	test_string("a\xC1\xBFb", "ab"); # highest bad 2-byte
+
+	test_string("a\xE0\x80\x80b", "ab"); # lowest bad 3-byte
+	test_string("a\xE0\x9F\xBFb", "ab"); # lowest bad 3-byte
+
+	test_string("a\xF0\x80\x80\x80b", "ab"); # lowest bad 4-byte
+	test_string("a\xF0\x8F\xBF\xBFb", "ab"); # lowest bad 4-byte
+
+
+	#define('SANATIZE_INVALID_THROW',	3); # throw an error
+	#define('SANATIZE_INVALID_CONVERT',	4); # convert from another encoding
+	#$GLOBALS[sanatize_convert_from]	= 'ISO-8859-1'; # Latin-1
 
 
 
