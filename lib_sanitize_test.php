@@ -13,6 +13,8 @@
 
 	# basics
 	test_sanitize("", "str", "");
+	test_sanitize("hello", "str", "hello");
+	test_sanitize(1, "str", "1");
 
 
 	test_summary();
