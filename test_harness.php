@@ -68,4 +68,30 @@
 		echo "Passed $GLOBALS[test_passed] of $total tests ($percent%)<br />\n";
 	}
 
+
+	function c8($i){
+		# encode a unicode code point into UTF-8
+
+		if ($i > 0x10000){ # 4 byte
+			return	 chr(0xF0 | (($i & 0x1C0000) >> 18))
+				.chr(0x80 | (($i & 0x3F000) >> 12))
+				.chr(0x80 | (($i & 0xFC0) >> 6))
+				.chr(0x80 | ($i & 0x3F));
+		}
+
+		if ($i > 0x800){ # 3 byte
+			return	 chr(0xE0 | (($i & 0xF000) >> 12))
+				.chr(0x80 | (($i & 0xFC0) >> 6))
+				.chr(0x80 | ($i & 0x3F));
+		}
+
+		if ($i > 0x80){ # 2 byte
+			return	 chr(0xC0 | (($i & 0x7C0) >> 6))
+				.chr(0x80 | ($i & 0x3F));
+		}
+
+		# 1 byte
+		return chr($i);
+	}
+
 ?>

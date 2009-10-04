@@ -17,6 +17,18 @@
 	test_sanitize(1, "str", "1");
 
 
+
+	#
+	# carriage return normalization
+	#
+
+	test_sanitize(c8(0x2028), 'str', " ");
+	test_sanitize(c8(0x2028), 'str_multi', "\n");
+
+	test_sanitize(c8(0x2029), 'str', " ");
+	test_sanitize(c8(0x2029), 'str_multi', "\n\n");
+
+
 	test_summary();
 
 	function test_sanitize($in, $type, $out){
