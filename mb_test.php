@@ -9,23 +9,23 @@
 	# make sure we filter out bytes that are never valid UTF-8
 	#
 	# C0-C1 - overlong encoding
-	# F5-FD - start of 4-6 bytes sequences
+	# F5-FD - start of 5-6 bytes sequences
 	# FE-FF - not used
 	#
 
-	test_string("hello\xC0world", "helloworld");
-	test_string("hello\xC1world", "helloworld");
-	test_string("hello\xF5world", "helloworld");
-	test_string("hello\xF6world", "helloworld");
-	test_string("hello\xF7world", "helloworld");
-	test_string("hello\xF8world", "helloworld");
-	test_string("hello\xF9world", "helloworld");
-	test_string("hello\xFAworld", "helloworld");
-	test_string("hello\xFBworld", "helloworld");
-	test_string("hello\xFCworld", "helloworld");
-	test_string("hello\xFDworld", "helloworld");
-	test_string("hello\xFEworld", "helloworld");
-	test_string("hello\xFFworld", "helloworld");
+	test_string("hello\xC0world", "helloworld", "overlong encoding byte C0");
+	test_string("hello\xC1world", "helloworld", "overlong encoding byte C1");
+	test_string("hello\xF5world", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xF6world", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xF7world", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xF8world", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xF9world", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xFAworld", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xFBworld", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xFCworld", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xFDworld", "helloworld", "start of deprecated 5-6 byte sequences");
+	test_string("hello\xFEworld", "helloworld", "invalid byte FE");
+	test_string("hello\xFFworld", "helloworld", "invalid byte FF");
 
 
 	#
@@ -38,25 +38,25 @@
 	# 10111111 / BF is a trailing byte
 	#
 
-	test_string("a\xBFb", "ab");	# trail
+	test_string("a\xBFb", "ab",	"lone trail");
 
-	test_string("a\x01b", "a\x01b");	# 0 leader w/ 0 trail
-	test_string("a\x01\xBFb", "a\x01b");	# 0 leader w/ 1 trail
+	test_string("a\x41b", "a\x41b",		"0 leader w/ 0 trail");
+	test_string("a\x41\xBFb", "a\x41b",	"0 leader w/ 1 trail");
 
-	test_string("a\xC2b", "ab");			# 1 leader w/ 0 trail
-	test_string("a\xC2\xBFb", "a\xC2\xBFb");	# 1 leader w/ 1 trail
-	test_string("a\xC2\xBF\xBFb", "a\xC2\xBFb");	# 1 leader w/ 2 trail
+	test_string("a\xC2b", "ab",			"1 leader w/ 0 trail");
+	test_string("a\xC2\xBFb", "a\xC2\xBFb",		"1 leader w/ 1 trail");
+	test_string("a\xC2\xBF\xBFb", "a\xC2\xBFb",	"1 leader w/ 2 trail");
 
-	test_string("a\xE0b", "ab");				# 2 leader w/ 0 trail
-	test_string("a\xE0\xBFb", "ab");			# 2 leader w/ 1 trail
-	test_string("a\xE0\xBF\xBFb", "a\xE0\xBF\xBFb");	# 2 leader w/ 2 trail
-	test_string("a\xE0\xBF\xBF\xBFb", "a\xE0\xBF\xBFb");	# 2 leader w/ 3 trail
+	test_string("a\xE0b", "ab",				"2 leader w/ 0 trail");
+	test_string("a\xE0\xBFb", "ab",				"2 leader w/ 1 trail");
+	test_string("a\xE0\xBF\xBFb", "a\xE0\xBF\xBFb",		"2 leader w/ 2 trail");
+	test_string("a\xE0\xBF\xBF\xBFb", "a\xE0\xBF\xBFb",	"2 leader w/ 3 trail");
 
-	test_string("a\xF0b", "ab");					# 3 leader w/ 0 trail
-	test_string("a\xF0\xBFb", "ab");				# 3 leader w/ 1 trail
-	test_string("a\xF0\xBF\xBFb", "ab");				# 3 leader w/ 2 trail
-	test_string("a\xF0\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb");	# 3 leader w/ 3 trail
-	test_string("a\xF0\xBF\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb");	# 3 leader w/ 4 trail
+	test_string("a\xF0b", "ab",					"3 leader w/ 0 trail");
+	test_string("a\xF0\xBFb", "ab",					"3 leader w/ 1 trail");
+	test_string("a\xF0\xBF\xBFb", "ab",				"3 leader w/ 2 trail");
+	test_string("a\xF0\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb",		"3 leader w/ 3 trail");
+	test_string("a\xF0\xBF\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb",	"3 leader w/ 4 trail");
 
 
 	#
@@ -70,21 +70,20 @@
 	# the correct number of bytes, if that would be more than 1?
 	#
 
-	test_string("a\xC0\x80b", "ab"); # lowest bad 2-byte
-	test_string("a\xC1\xBFb", "ab"); # highest bad 2-byte
+	test_string("a\xC0\x80b", "ab", "lowest overlong 2-byte");
+	test_string("a\xC1\xBFb", "ab", "highest overlong 2-byte");
 
-	test_string("a\xE0\x80\x80b", "ab"); # lowest bad 3-byte
-	test_string("a\xE0\x9F\xBFb", "ab"); # lowest bad 3-byte
+	test_string("a\xE0\x80\x80b", "ab", "lowest overlong 3-byte");
+	test_string("a\xE0\x9F\xBFb", "ab", "lowest overlong 3-byte");
 
-	test_string("a\xF0\x80\x80\x80b", "ab"); # lowest bad 4-byte
-	test_string("a\xF0\x8F\xBF\xBFb", "ab"); # lowest bad 4-byte
-	
-
+	test_string("a\xF0\x80\x80\x80b", "ab", "lowest overlong 4-byte");
+	test_string("a\xF0\x8F\xBF\xBFb", "ab", "lowest overlong 4-byte");
 
 
 	#
 	# test the replacement mode
 	#
+if (0){
 
 	$GLOBALS[sanatize_mode]		= SANATIZE_INVALID_REPLACE;
 	$GLOBALS[sanatize_replace]	= ord('!');
@@ -92,8 +91,8 @@
 	test_string("hello\xC0world", "hello!world");
 	test_string("hello\xF5world", "hello!world");
 
-	test_string("a\x01b", "a\x01b");	# 0 leader w/ 0 trail
-	test_string("a\x01\xBFb", "a\x01b");	# 0 leader w/ 1 trail
+	test_string("a\x41b", "a\x41b");	# 0 leader w/ 0 trail
+	test_string("a\x41\xBFb", "a\x41b");	# 0 leader w/ 1 trail
 
 	test_string("a\xC2b", "ab");			# 1 leader w/ 0 trail
 	test_string("a\xC2\xBFb", "a\xC2\xBFb");	# 1 leader w/ 1 trail
@@ -118,7 +117,7 @@
 
 	test_string("a\xF0\x80\x80\x80b", "ab"); # lowest bad 4-byte
 	test_string("a\xF0\x8F\xBF\xBFb", "ab"); # lowest bad 4-byte
-
+}
 
 	#define('SANATIZE_INVALID_THROW',	3); # throw an error
 	#define('SANATIZE_INVALID_CONVERT',	4); # convert from another encoding
@@ -128,9 +127,12 @@
 
 	test_summary();
 
-	function test_string($in, $out){
+	function test_string($in, $out, $name=null){
+		$GLOBALS[tests][string]++;
+		if (!isset($name)) $name = "Unknown string test ".$GLOBALS[tests][string];		
+
 		$got = sanitize($in, 'str');
-		test_harness($in, $out, $got, "String test ".++$GLOBALS[tests][string]);
+		test_harness($in, $out, $got, $name);
 	}
 
 ?>
