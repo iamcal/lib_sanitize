@@ -5,6 +5,9 @@
 
 	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
 
+
+	###########################################################################################
+
 	#
 	# make sure we filter out bytes that are never valid UTF-8
 	#
@@ -28,55 +31,88 @@
 	test_string("hello\xFEworld", "helloworld", "invalid byte FE");
 	test_string("hello\xFFworld", "helloworld", "invalid byte FF");
 
+	###########################################################################################
 
 	#
 	# make sure we strip stray leading and trailing bytes
 	#
-	# 00000001 / 01 expects 0 trailing
-	# 11000010 / C2 expects 1 trailing
-	# 11100000 / E0 expects 2 trailing
-	# 11110000 / F0 expects 3 trailing
-	# 10111111 / BF is a trailing byte
+
+	#
+	# trailing bytes (BF = 10111111) by themselves are bad
 	#
 
 	test_string("a\xBFb", "ab",	"lone trail");
 
+
+	#
+	# bytes with the highest bit unset (like x41) can't have trailers
+	#
+
 	test_string("a\x41b", "a\x41b",		"0 leader w/ 0 trail");
 	test_string("a\x41\xBFb", "a\x41b",	"0 leader w/ 1 trail");
+
+
+	#
+	# C2 (11000010) expects 1 trailing byte
+	# C2-BF is U+00BF
+	#
 
 	test_string("a\xC2b", "ab",			"1 leader w/ 0 trail");
 	test_string("a\xC2\xBFb", "a\xC2\xBFb",		"1 leader w/ 1 trail");
 	test_string("a\xC2\xBF\xBFb", "a\xC2\xBFb",	"1 leader w/ 2 trail");
 
-	test_string("a\xE0b", "ab",				"2 leader w/ 0 trail");
-	test_string("a\xE0\xBFb", "ab",				"2 leader w/ 1 trail");
-	test_string("a\xE0\xBF\xBFb", "a\xE0\xBF\xBFb",		"2 leader w/ 2 trail");
-	test_string("a\xE0\xBF\xBF\xBFb", "a\xE0\xBF\xBFb",	"2 leader w/ 3 trail");
 
-	test_string("a\xF0b", "ab",					"3 leader w/ 0 trail");
-	test_string("a\xF0\xBFb", "ab",					"3 leader w/ 1 trail");
-	test_string("a\xF0\xBF\xBFb", "ab",				"3 leader w/ 2 trail");
-	test_string("a\xF0\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb",		"3 leader w/ 3 trail");
-	test_string("a\xF0\xBF\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb",	"3 leader w/ 4 trail");
+	#
+	# we can't use E0-BF-BF since U+0FFF isn't a valid codepoint.
+	# instead we use E1-80-80 since U+1000 is valid
+	#
+
+	test_string("a\xE1b", "ab",				"2 leader w/ 0 trail");
+	test_string("a\xE1\x80b", "ab",				"2 leader w/ 1 trail");
+	test_string("a\xE1\x80\x80b", "a\xE1\x80\x80b",		"2 leader w/ 2 trail");
+	test_string("a\xE1\x80\x80\x80b", "a\xE1\x80\x80b",	"2 leader w/ 3 trail");
 
 
 	#
-	# encoding that are out of range
+	# we can't use F0-BF-BF-BF since U+3FFFF is always invalid.
+	# not much is defined on this plane, but U+20000 (F0-A0-80-80) is
+	# a valid ideograph (extension b)
+	#
+
+	test_string("a\xF0b", "ab",					"3 leader w/ 0 trail");
+	test_string("a\xF0\xA0b", "ab",					"3 leader w/ 1 trail");
+	test_string("a\xF0\xA0\x80b", "ab",				"3 leader w/ 2 trail");
+	test_string("a\xF0\xA0\x80\x80b", "a\xF0\xA0\x80\x80b",		"3 leader w/ 3 trail");
+	test_string("a\xF0\xA0\x80\x80\x80b", "a\xF0\xA0\x80\x80b",	"3 leader w/ 4 trail");
+
+	###########################################################################################
+
+	#
+	# encodings that are out of range
 	#
 	# 4 bytes over U+10FFFF
 	# 5 bytes
 	# 6 bytes
 	#
 
-	test_string(c8(0x110000), "", "lowest out of range 4-byte U+110000");
-	test_string(c8(0x1FFFFF), "", "highest out of range 4-byte U+1FFFFF");
+	test_string('a'.c8(0x110000).'b', "ab", "lowest out of range 4-byte U+110000");
+	test_string('a'.c8(0x1FFFFF).'b', "ab", "highest out of range 4-byte U+1FFFFF");
 
-	test_string("\xF8\x88\x80\x80\x80", "", "lowest 5-byte U+200000");
-	test_string("\xFB\xBF\xBF\xBF\xBF", "", "highest 5-byte U+3FFFFFF");
+	test_string("a\xF8\x88\x80\x80\x80b", "ab", "lowest 5-byte U+200000");
+	test_string("a\xFB\xBF\xBF\xBF\xBFb", "ab", "highest 5-byte U+3FFFFFF");
 
-	test_string("\xFC\x84\x80\x80\x80\x80", "", "lowest 6-byte U+4000000");
-	test_string("\xFD\xBF\xBF\xBF\xBF\xBF", "", "highest 6-byte U+7FFFFFFF");
+	test_string("a\xFC\x84\x80\x80\x80\x80b", "ab", "lowest 6-byte starting with FC - U+4000000");
+	test_string("a\xFC\xBF\xBF\xBF\xBF\xBFb", "ab", "highest 6-byte starting with FC - U+3FFFFFFF");
 
+	#
+	# we test this separately since having the FD byte causes mbstring to
+	# insert crap like 'BAD+FFFFFF'
+	#
+
+	test_string("a\xFD\x80\x80\x80\x80\x80b", "ab", "lowest 6-byte starting with FD - U+40000000");
+	test_string("a\xFD\xBF\xBF\xBF\xBF\xBFb", "ab", "highest 6-byte starting with FD - U+7FFFFFFF");
+
+	###########################################################################################
 
 	#
 	# check we remove overlong encodings (using 3 bytes when only 2 were needed)
@@ -99,6 +135,8 @@
 	test_string("a\xF0\x8F\xBF\xBFb", "ab", "highest overlong 4-byte");
 
 	# TODO: overlong 5 & 6 bytes
+
+	###########################################################################################
 
 
 	#

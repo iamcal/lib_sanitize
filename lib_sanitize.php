@@ -101,7 +101,7 @@
 		#mb_substitute_character($GLOBALS[sanatize_mode] == SANATIZE_INVALID_REPLACE ? $GLOBALS[sanatize_replace] : 'none' );
 		mb_substitute_character('long');
 
-		$test = mb_convert_encoding($input, 'UTF-8', 'UTF-8');
+		$test = mb_convert_encoding(str_replace("\xFD", "\xFC", $input), 'UTF-8', 'UTF-8');
 
 		if ($test != $input){
 
@@ -111,6 +111,7 @@
 					throw new Exception('Sanatize found invalid input');
 
 				case SANATIZE_INVALID_CONVERT:
+					$input = str_replace("\xFD", "\xFC", $input);
 					$input = mb_convert_encoding($input, $GLOBALS[sanatize_convert_from], 'UTF-8');
 					break;
 
@@ -119,6 +120,8 @@
 					$input = $test;
 			}
 		}
+
+return $input;
 
 
 		#
