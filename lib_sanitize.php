@@ -26,12 +26,10 @@
 	#
 
 	define('SANATIZE_INVALID_STRIP',	1); # strip out the offending bytes
-	define('SANATIZE_INVALID_REPLACE',	2); # replace offending bytes with the replacement character
-	define('SANATIZE_INVALID_THROW',	3); # throw an error
-	define('SANATIZE_INVALID_CONVERT',	4); # convert from another encoding
+	define('SANATIZE_INVALID_THROW',	2); # throw an error
+	define('SANATIZE_INVALID_CONVERT',	3); # convert from another encoding
 
 	$GLOBALS[sanatize_mode]		= SANATIZE_INVALID_STRIP;
-	$GLOBALS[sanatize_replace]	= ord('?');
 	$GLOBALS[sanatize_convert_from]	= 'ISO-8859-1'; # Latin-1
 
 	##############################################################################
@@ -98,10 +96,9 @@
 		# next, check that it's valid UTF-8
 		#
 
-		#mb_substitute_character($GLOBALS[sanatize_mode] == SANATIZE_INVALID_REPLACE ? $GLOBALS[sanatize_replace] : 'none' );
 		mb_substitute_character('long');
 
-		$test = mb_convert_encoding(str_replace("\xFD", "\xFC", $input), 'UTF-8', 'UTF-8');
+		$test = mb_convert_encoding(preg_replace('![\xC0-\xC1\xF5-\xFF]!', '', $input), 'UTF-8', 'UTF-8');
 
 		if ($test != $input){
 
@@ -111,17 +108,13 @@
 					throw new Exception('Sanatize found invalid input');
 
 				case SANATIZE_INVALID_CONVERT:
-					$input = str_replace("\xFD", "\xFC", $input);
 					$input = mb_convert_encoding($input, $GLOBALS[sanatize_convert_from], 'UTF-8');
 					break;
 
 				case SANATIZE_INVALID_STRIP:
-				case SANATIZE_INVALID_REPLACE:
 					$input = $test;
 			}
 		}
-
-return $input;
 
 
 		#
@@ -135,11 +128,12 @@ return $input;
 		# U+FFF9..U+FFFA	1111111111111001..1111111111111010		\xEF\xBF\xB9..\xEF\xBF\xBA		\xEF\xBF[\xB9-\xBA]
 		# U+E0000..U+E007F	11100000000000000000..11100000000001111111	\xF3\xA0\x80\x80..\xF3\xA0\x81\xBF	\xF3\xA0[\x80-\x81][\x80-\xBF]
 		# U+D800..U+DFFF	1101100000000000..1101111111111111		\xED\xA0\x80..\xED\xBF\xBF		\xED[\xA0-\xBF][\x80-\xBF]
+		# U+110000..U+13FFFF	100010000000000000000..100111111111111111111	\xf4\x90\x80\x80..\xf4\xbf\xbf\xbf	\xf4[\x90-\xbf][\x80-\xbf][\x80-\xbf]
 		#
 
-		$rx = '[\x00-\x08]|[\x0E-\x1F]|\x7F|\xC2[\x80-\x9F]|\xEF\xBB\xBF|\xE2\x81[\xAA-\xAF]|\xEF\xBF[\xB9-\xBA]|\xF3\xA0[\x80-\x81][\x80-\xBF]|\xED[\xA0-\xBF][\x80-\xBF]|\p{Cn}';
+		$rx = '[\x00-\x08]|[\x0E-\x1F]|\x7F|\xC2[\x80-\x9F]|\xEF\xBB\xBF|\xE2\x81[\xAA-\xAF]|\xEF\xBF[\xB9-\xBA]|\xF3\xA0[\x80-\x81][\x80-\xBF]|\xED[\xA0-\xBF][\x80-\xBF]|\xf4[\x90-\xbf][\x80-\xbf][\x80-\xbf]'; # |\p{Cn}
 
-		$input = preg_replace('!'.$rx.'!u', '', $input);		
+		$input = preg_replace('!'.$rx.'!', '', $input);		
 
 
 		#

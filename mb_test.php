@@ -90,24 +90,33 @@
 	#
 	# encodings that are out of range
 	#
-	# 4 bytes over U+10FFFF
-	# 5 bytes
-	# 6 bytes
+
+	#
+	# only *some* 4-byte encodings are out of range - those over U+10FFFF.
+	# that means some starting with F4 are invalid, while all starting with F5-F7 are invalid
 	#
 
-	test_string('a'.c8(0x110000).'b', "ab", "lowest out of range 4-byte U+110000");
-	test_string('a'.c8(0x1FFFFF).'b', "ab", "highest out of range 4-byte U+1FFFFF");
+	test_string("a\xf4\x90\x80\x80b", "ab", "lowest out of range 4-byte starting with F4 - U+110000");
+	test_string("a\xF4\xBF\xBF\xBFb", "ab", "highest out of range 4-byte starting with F4 - U+13FFFF");
+
+	test_string("a\xF5\x80\x80\x80b", "ab", "lowest out of range 4-byte starting over F4 - U+140000");
+	test_string("a\xf7\xbf\xbf\xbfb", "ab", "highest out of range 4-byte starting over F4 - U+1FFFFF");
+
+	#
+	# 5's are easiest to test
+	#
 
 	test_string("a\xF8\x88\x80\x80\x80b", "ab", "lowest 5-byte U+200000");
 	test_string("a\xFB\xBF\xBF\xBF\xBFb", "ab", "highest 5-byte U+3FFFFFF");
 
-	test_string("a\xFC\x84\x80\x80\x80\x80b", "ab", "lowest 6-byte starting with FC - U+4000000");
-	test_string("a\xFC\xBF\xBF\xBF\xBF\xBFb", "ab", "highest 6-byte starting with FC - U+3FFFFFFF");
-
 	#
 	# we test this separately since having the FD byte causes mbstring to
-	# insert crap like 'BAD+FFFFFF'
+	# insert crap like 'BAD+FFFFFF' which made for weird results. this is no
+	# longer true, since we pre-strip, but these tests still work
 	#
+
+	test_string("a\xFC\x84\x80\x80\x80\x80b", "ab", "lowest 6-byte starting with FC - U+4000000");
+	test_string("a\xFC\xBF\xBF\xBF\xBF\xBFb", "ab", "highest 6-byte starting with FC - U+3FFFFFFF");
 
 	test_string("a\xFD\x80\x80\x80\x80\x80b", "ab", "lowest 6-byte starting with FD - U+40000000");
 	test_string("a\xFD\xBF\xBF\xBF\xBF\xBFb", "ab", "highest 6-byte starting with FD - U+7FFFFFFF");
