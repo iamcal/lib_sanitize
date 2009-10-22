@@ -10,7 +10,7 @@
 	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
 
 	###########################################################################################
-
+if (0){
 	#
 	# make sure we filter out bytes that are never valid UTF-8
 	#
@@ -162,7 +162,7 @@
 
 	test_string("a\xFC\x80\x80\x80\x80\x80b", "ab", "lowest overlong 6-byte - U+0000");
 	test_string("a\xFC\x83\xBF\xBF\xBF\xBFb", "ab", "highest overlong 6-byte - U+3FFFFFF");
-
+}
 	###########################################################################################
 
 
@@ -212,6 +212,108 @@ if (0){
 	###########################################################################################
 
 	#
+	# test input conversion
+	#
+
+	$GLOBALS[sanatize_mode]			= SANATIZE_INVALID_STRIP;
+
+
+	#
+	# Shift-JIS / SJIS / MS_Kanji
+	# http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/SHIFTJIS.TXT
+	#
+
+	$GLOBALS[sanatize_input_encoding]	= 'SJIS';
+
+	test_string("\x76"    , "\x76"        , "SJIS 0x76   -> U+0076");
+	test_string("\xa6"    , "\xef\xbd\xa6", "SJIS 0xA6   -> U+FF66");
+	test_string("\x81\x40", "\xe3\x80\x80", "SJIS 0x8140 -> U+3000");
+	test_string("\x82\xdc", "\xe3\x81\xbe", "SJIS 0x82DC -> U+307E");
+	test_string("\x8c\xcc", "\xe6\x95\x85", "SJIS 0x8CCC -> U+6545");
+
+
+	#
+	# ISO-2022-JP => US-ASCII + JIS X0201:1976 + JIS X0208:1978 + JIS X0208:1983 
+	# http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0201.TXT
+	# http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT
+	#
+	# 208-1978 is escaped with 0x1B 0x24($) 0x40(@)
+	# 208-1983 is escaped with 0x1B 0x24($) 0x42(B)
+	#
+
+	$GLOBALS[sanatize_input_encoding] = 'ISO-2022-JP';
+
+	test_string("\x76", "\x76"        , "ISO-2022-JP US-ASCII 0x76   -> U+0076");
+	test_string("\xa6", "\xef\xbd\xa6", "ISO-2022-JP JIS-X-201 0xA6   -> U+FF66");
+	test_string("\xbe", "\xef\xbd\xbe", "ISO-2022-JP JIS-X-201 0xBE   -> U+FF7E");
+
+	test_string("\x1B\$@\x21\x4a", "\xef\xbc\x88", "ISO-2022-JP JIS-X-208-1978 0x214A -> U+FF08");
+	test_string("\x1B\$@\x3c\x2d", "\xe8\xbe\x9e", "ISO-2022-JP JIS-X-208-1978 0x3C2D -> U+8F9E");
+
+	test_string("\x1B\$B\x21\x4a", "\xef\xbc\x88", "ISO-2022-JP JIS-X-208-1983 0x214A -> U+FF08");
+	test_string("\x1B\$B\x3c\x2d", "\xe8\xbe\x9e", "ISO-2022-JP JIS-X-208-1983 0x3C2D -> U+8F9E");
+
+
+	#
+	# EUC-JP => US-ASCII + JIS X0201:1997 (hankaku kana part) + JIS X0208:1990 + JIS X0212:1990 
+	# http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0201.TXT
+	# http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT
+	# http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0212.TXT
+	#
+	# to encode 208 in EUC-JP, just add 0x8080
+	# to encode 212 in EUC-JP put 0x8f followed by the code+0x8080
+	#
+
+	$GLOBALS[sanatize_input_encoding] = 'EUC-JP';
+
+	test_string("\x76", "\x76", "EUC-JP US-ASCII 0x76 -> U+0076");
+
+	test_string("\x8E\xB6", "\xef\xbd\xb6", "EUC-JP JIS-X-201 0xB6 -> U+FF76");
+	test_string("\x8E\xDE", "\xef\xbe\x9e", "EUC-JP JIS-X-201 0xDE -> U+FF9E");
+
+	test_string("\xA1\xB3", "\xe3\x83\xbd", "EUC-JP JIS-X-0208 0x2133 -> U+30FD");
+	test_string("\xB0\xD3", "\xe5\xb0\x89", "EUC-JP JIS-X-0208 0x3053 -> U+5C09");
+
+	test_string("\x8f\xB0\xB1", "\xe4\xb9\x84", "EUC-JP JIS-X-0212 0x3031 - U+4E44");
+	test_string("\x8f\xC2\xD8", "\xe6\x9a\xa4", "EUC-JP JIS-X-0212 0x4258 - U+66A4");
+
+
+	#
+	# ISO-8859-1 / Latin-1
+	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-1.TXT
+	#
+
+	$GLOBALS[sanatize_input_encoding] = 'ISO-8859-1';
+
+	test_string("\x76", "\x76",     "ISO-8859-1 0x76 -> U+0076");
+	test_string("\xE6", "\xc3\xa6", "ISO-8859-1 0xE6 -> U+00E6");
+
+
+	#
+	# ISO-8859-2 / Latin-2
+	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-2.TXT
+	#	
+
+	$GLOBALS[sanatize_input_encoding] = 'ISO-8859-2';
+
+	test_string("\x76", "\x76",     "ISO-8859-2 0x76 -> U+0076");
+	test_string("\xE6", "\xc4\x87", "ISO-8859-2 0xE6 -> U+0107");
+
+
+	#
+	# ISO-8859-15 / Latin-9
+	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-15.TXT
+	#	
+
+	$GLOBALS[sanatize_input_encoding] = 'ISO-8859-15';
+
+	test_string("\x76", "\x76",     "ISO-8859-15 0x76 -> U+0076");
+	test_string("\xBE", "\xc5\xb8", "ISO-8859-15 0xBE -> U+0178");
+
+
+	###########################################################################################
+if (0){
+	#
 	# basics
 	#
 
@@ -229,12 +331,11 @@ if (0){
 
 	test_sanitize(c8(0x2029), 'str', " ");
 	test_sanitize(c8(0x2029), 'str_multi', "\n\n");
+}
 
+	###########################################################################################
 
 	test_summary();
-
-
-
 
 	###########################################################################################
 

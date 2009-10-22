@@ -130,13 +130,15 @@
 		# first, do we need to convert from another character set or encoding?
 		#
 
+		if ($GLOBALS[sanatize_input_encoding] != 'UTF-8'){
+
+			mb_substitute_character(0xFFFD);
+			$input = mb_convert_encoding($input, 'UTF-8', $GLOBALS[sanatize_input_encoding]);
+		}
+
 
 		#
 		# next, check that it's valid UTF-8
-		#
-
-		mb_substitute_character('long');
-
 		#
 		# we strip out several things before feeding it into the convertor, since the convertor
 		# tries to do some fixing, while we'd rather it just gave up on bad codes.
@@ -145,6 +147,8 @@
 		# overlong 3 bytes: E0[80-9F][80-BF]
 		# overlong 4 bytes: F0[80-8F][80-BF][80-BF]
 		#
+
+		mb_substitute_character('long');
 
 		$test = mb_convert_encoding(preg_replace('![\xC0-\xC1\xF5-\xFF]|\xE0[\x80-\x9F][\x80-\xbf]|\xF0[\x80-\x8F][\x80-\xBF][\x80-\xBF]!', '', $input), 'UTF-8', 'UTF-8');
 
@@ -156,6 +160,8 @@
 					throw new Exception('Sanatize found invalid input');
 
 				case SANATIZE_INVALID_CONVERT:
+					mb_substitute_character(0xFFFD);
+
 					$input = mb_convert_encoding($input, $GLOBALS[sanatize_convert_from], 'UTF-8');
 					break;
 
