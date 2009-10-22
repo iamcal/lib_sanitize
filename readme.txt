@@ -38,7 +38,7 @@ USAGE
 	$GLOBALS[sanatize_convert_from] = 'ISO-8859-1'; # Latin-1
 
 	# alternative mode - if the input isn't valid UTF-8, throw an exception
-	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_THROW
+	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_THROW;
 
 
 	# if you know your input encoding, set it first (all input is converted to UTF-8)

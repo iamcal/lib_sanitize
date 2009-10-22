@@ -31,9 +31,9 @@
 	define('SANATIZE_INVALID_THROW',	2); # throw an error
 	define('SANATIZE_INVALID_CONVERT',	3); # convert from another encoding
 
-	$GLOBALS[sanatize_mode]			= SANATIZE_INVALID_STRIP;
-	$GLOBALS[sanatize_convert_from]		= 'ISO-8859-1'; # Latin-1
-	$GLOBALS[sanatize_input_encoding]	= 'UTF-8';
+	$GLOBALS['sanatize_mode']		= SANATIZE_INVALID_STRIP;
+	$GLOBALS['sanatize_convert_from']	= 'ISO-8859-1'; # Latin-1
+	$GLOBALS['sanatize_input_encoding']	= 'UTF-8';
 
 	##############################################################################
 
@@ -130,10 +130,10 @@
 		# first, do we need to convert from another character set or encoding?
 		#
 
-		if ($GLOBALS[sanatize_input_encoding] != 'UTF-8'){
+		if ($GLOBALS['sanatize_input_encoding'] != 'UTF-8'){
 
 			mb_substitute_character(0xFFFD);
-			$input = mb_convert_encoding($input, 'UTF-8', $GLOBALS[sanatize_input_encoding]);
+			$input = mb_convert_encoding($input, 'UTF-8', $GLOBALS['sanatize_input_encoding']);
 		}
 
 
@@ -154,7 +154,7 @@
 
 		if ($test != $input){
 
-			switch ($GLOBALS[sanatize_mode]){
+			switch ($GLOBALS['sanatize_mode']){
 
 				case SANATIZE_INVALID_THROW:
 					throw new Exception('Sanatize found invalid input');
@@ -162,7 +162,7 @@
 				case SANATIZE_INVALID_CONVERT:
 					mb_substitute_character(0xFFFD);
 
-					$input = mb_convert_encoding($input, 'UTF-8', $GLOBALS[sanatize_convert_from]);
+					$input = mb_convert_encoding($input, 'UTF-8', $GLOBALS['sanatize_convert_from']);
 					break;
 
 				case SANATIZE_INVALID_STRIP:

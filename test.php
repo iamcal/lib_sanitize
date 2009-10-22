@@ -3,6 +3,8 @@
 	# $Id$
 	#
 
+	error_reporting(30719 | 2048); # E_ALL | E_STRICT
+
 	include("lib_sanitize.php");
 
 	test_start();
@@ -14,6 +16,7 @@
 	define('RUN_TESTS_REPLACE'		, 1);
 	define('RUN_TESTS_CONVERT_FROM'		, 1);
 	define('RUN_TESTS_THROW'		, 1);
+	define('RUN_TESTS_BAD_MODE'		, 1);
 	define('RUN_TESTS_INPUT_CONVERSION'	, 1);
 	define('RUN_TESTS_BASICS'		, 1);
 
@@ -22,7 +25,7 @@
 
 if (RUN_TESTS_BAD_BYTES){
 
-	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
+	$GLOBALS['sanatize_mode'] = SANATIZE_INVALID_STRIP;
 
 	#
 	# make sure we filter out bytes that are never valid UTF-8
@@ -196,8 +199,8 @@ if (RUN_TESTS_CONVERT_FROM){
 	# test invalid conversion
 	#
 
-	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_CONVERT;
-	$GLOBALS[sanatize_convert_from] = 'ISO-8859-1';
+	$GLOBALS['sanatize_mode'] = SANATIZE_INVALID_CONVERT;
+	$GLOBALS['sanatize_convert_from'] = 'ISO-8859-1';
 
 	test_string("\x76", "\x76", "Latin-1 fallback 0x76");
 	test_string("\xEB", "\xc3\xab", "Latin-1 fallback 0xEB");
@@ -213,7 +216,7 @@ if (RUN_TESTS_THROW){
 	# test invalid exceptions
 	#
 
-	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_THROW;
+	$GLOBALS['sanatize_mode'] = SANATIZE_INVALID_THROW;
 	
 }
 	###########################################################################################
@@ -224,7 +227,7 @@ if (RUN_TESTS_BAD_MODE){
 	# test a non-existent mode
 	#
 
-	$GLOBALS[sanatize_mode]		= 1000;
+	$GLOBALS['sanatize_mode']		= 1000;
 
 	test_string("hello\xC0world", "ERROR: Unknown sanatize mode");
 }
@@ -238,7 +241,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# test input conversion
 	#
 
-	$GLOBALS[sanatize_mode]	= SANATIZE_INVALID_STRIP;
+	$GLOBALS['sanatize_mode']	= SANATIZE_INVALID_STRIP;
 
 
 	#
@@ -246,7 +249,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/SHIFTJIS.TXT
 	#
 
-	$GLOBALS[sanatize_input_encoding]	= 'SJIS';
+	$GLOBALS['sanatize_input_encoding']	= 'SJIS';
 
 	test_string("\x76"    , "\x76"        , "SJIS 0x76   -> U+0076");
 	test_string("\xa6"    , "\xef\xbd\xa6", "SJIS 0xA6   -> U+FF66");
@@ -264,7 +267,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# 208-1983 is escaped with 0x1B 0x24($) 0x42(B)
 	#
 
-	$GLOBALS[sanatize_input_encoding] = 'ISO-2022-JP';
+	$GLOBALS['sanatize_input_encoding'] = 'ISO-2022-JP';
 
 	test_string("\x76", "\x76"        , "ISO-2022-JP US-ASCII 0x76   -> U+0076");
 	test_string("\xa6", "\xef\xbd\xa6", "ISO-2022-JP JIS-X-201 0xA6   -> U+FF66");
@@ -287,7 +290,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# to encode 212 in EUC-JP put 0x8f followed by the code+0x8080
 	#
 
-	$GLOBALS[sanatize_input_encoding] = 'EUC-JP';
+	$GLOBALS['sanatize_input_encoding'] = 'EUC-JP';
 
 	test_string("\x76", "\x76", "EUC-JP US-ASCII 0x76 -> U+0076");
 
@@ -306,7 +309,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-1.TXT
 	#
 
-	$GLOBALS[sanatize_input_encoding] = 'ISO-8859-1';
+	$GLOBALS['sanatize_input_encoding'] = 'ISO-8859-1';
 
 	test_string("\x76", "\x76",     "ISO-8859-1 0x76 -> U+0076");
 	test_string("\xE6", "\xc3\xa6", "ISO-8859-1 0xE6 -> U+00E6");
@@ -317,7 +320,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-2.TXT
 	#	
 
-	$GLOBALS[sanatize_input_encoding] = 'ISO-8859-2';
+	$GLOBALS['sanatize_input_encoding'] = 'ISO-8859-2';
 
 	test_string("\x76", "\x76",     "ISO-8859-2 0x76 -> U+0076");
 	test_string("\xE6", "\xc4\x87", "ISO-8859-2 0xE6 -> U+0107");
@@ -328,7 +331,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-15.TXT
 	#	
 
-	$GLOBALS[sanatize_input_encoding] = 'ISO-8859-15';
+	$GLOBALS['sanatize_input_encoding'] = 'ISO-8859-15';
 
 	test_string("\x76", "\x76",     "ISO-8859-15 0x76 -> U+0076");
 	test_string("\xBE", "\xc5\xb8", "ISO-8859-15 0xBE -> U+0178");
@@ -338,7 +341,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# remember to reset this, or further tests will get fucked up
 	#
 
-	$GLOBALS[sanatize_input_encoding]	= 'UTF-8';
+	$GLOBALS['sanatize_input_encoding']	= 'UTF-8';
 
 }
 
@@ -374,8 +377,13 @@ if (RUN_TESTS_BASICS){
 
 	function test_start(){
 
-		$GLOBALS[tests] = array();
-		$GLOBALS[verbose] = $_GET[verbose];
+		$GLOBALS['tests'] = array(
+			'string' => 0,
+			'sanitize' => 0,
+		);
+		$GLOBALS['verbose'] = isset($_GET['verbose']) ? 1 : 0;
+		$GLOBALS['test_passed'] = 0;
+		$GLOBALS['test_failed'] = 0;
 
 		echo '<table border="1">';
 		echo "<tr>\n";
@@ -393,17 +401,17 @@ if (RUN_TESTS_BASICS){
 		$pass = 0;
 
 		if ($out === $got){
-			$GLOBALS[test_passed]++;
-			if ($GLOBALS[verbose]){
+			$GLOBALS['test_passed']++;
+			if ($GLOBALS['verbose']){
 				$pass = 1;
 				$output = 1;
 			}
 		}else{
-			$GLOBALS[test_failed]++;
+			$GLOBALS['test_failed']++;
 			$output = 1;
 		}
 		if ($output){
-			if ($GLOBALS[verbose] || ($out != $got)){
+			if ($GLOBALS['verbose'] || ($out != $got)){
 				$out_type = gettype($out);
 				$got_type = gettype($got);
 
@@ -433,14 +441,18 @@ if (RUN_TESTS_BASICS){
 
 		echo '</table>';
 
-		$total = $GLOBALS[test_passed] + $GLOBALS[test_failed];
-		$percent = Round(10000 * $GLOBALS[test_passed] / $total) / 100;
+		$total = $GLOBALS['test_passed'] + $GLOBALS['test_failed'];
+		if ($total){
+			$percent = Round(10000 * $GLOBALS['test_passed'] / $total) / 100;
+		}else{
+			$percent = 0;
+		}
 
 		echo "<br />\n";
 		echo "Passed $GLOBALS[test_passed] of $total tests ($percent%)<br />\n";
 		echo "<br />";
 
-		if ($GLOBALS[verbose]){
+		if ($GLOBALS['verbose']){
 			echo '<a href="test.php">Hide test details</a>';
 		}else{
 			echo '<a href="test.php?verbose=1">Show test details</a>';
@@ -488,16 +500,16 @@ if (RUN_TESTS_BASICS){
 	}
 
 	function test_sanitize($in, $type, $out, $name=null){
-		$GLOBALS[tests][sanitize]++;
-		if (!isset($name)) $name = "Unknown sanatize test {$GLOBALS[tests][sanitize]} ($type)";
+		$GLOBALS['tests']['sanitize']++;
+		if (!isset($name)) $name = "Unknown sanatize test {$GLOBALS['tests']['sanitize']} ($type)";
 
 		$got = sanitize($in, $type);
 		test_harness($in, $out, $got, $name);
 	}
 
 	function test_string($in, $out, $name=null){
-		$GLOBALS[tests][string]++;
-		if (!isset($name)) $name = "Unknown string test ".$GLOBALS[tests][string];
+		$GLOBALS['tests']['string']++;
+		if (!isset($name)) $name = "Unknown string test ".$GLOBALS['tests']['string'];
 
 		$got = sanitize($in, 'str');
 		test_harness($in, $out, $got, $name);
