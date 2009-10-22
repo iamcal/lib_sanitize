@@ -131,7 +131,7 @@
 	# 4 byte: 11110000 1000xxxx 10xxxxxx 10xxxxxx
 	#
 
-	test_string("a\xC0\x80b", "ab", "lowest overlong 2-byte = U+0000");
+	test_string("a\xC0\x80b", "ab", "lowest overlong 2-byte - U+0000");
 	test_string("a\xC1\xBFb", "ab", "highest overlong 2-byte - U+007F");
 
 	#
