@@ -48,9 +48,15 @@
 				}else{
 					echo "\t<td style=\"background-color: red; color: white\">fail</td>\n";
 				}
-				echo "\t<td>".HtmlSpecialChars($in)."</td>\n";
-				echo "\t<td>$out_type:".htmlentities($out)."</td>\n";
-				echo "\t<td>$got_type:".htmlentities($got)."</td>\n";
+				echo "\t<td>".byteify($in)."</td>\n";
+
+				if ($out_type == $got_type){
+					echo "\t<td>".byteify($out)."</td>\n";
+					echo "\t<td>".byteify($got)."</td>\n";
+				}else{
+					echo "\t<td>$out_type:".byteify($out)."</td>\n";
+					echo "\t<td>$got_type:".byteify($got)."</td>\n";
+				}
 
 				echo "</tr>\n";
 			}
@@ -68,6 +74,18 @@
 		echo "Passed $GLOBALS[test_passed] of $total tests ($percent%)<br />\n";
 	}
 
+	function byteify($s){
+		$out = '';
+		for ($i=0; $i<strlen($s); $i++){
+			$c = ord(substr($s,$i,1));
+			if ($c >= 0x20 && $c <= 0x7f){
+				$out .= htmlentities(chr($c));
+			}else{
+				$out .= '<span style="color: blue">'.sprintf('[%02X]', $c)."</span>";
+			}
+		}
+		return trim($out);
+	}
 
 	function c8($i){
 		# encode a unicode code point into UTF-8
