@@ -98,7 +98,16 @@
 
 		mb_substitute_character('long');
 
-		$test = mb_convert_encoding(preg_replace('![\xC0-\xC1\xF5-\xFF]!', '', $input), 'UTF-8', 'UTF-8');
+		#
+		# we strip out several things before feeding it into the convertor, since the convertor
+		# tries to do some fixing, while we'd rather it just gave up on bad codes.
+		#
+		# invalid bytes: C0-C1, F5-FF
+		# overlong 3 bytes: E0[80-9F][80-BF]
+		# overlong 4 bytes: F0[80-8F][80-BF][80-BF]
+		#
+
+		$test = mb_convert_encoding(preg_replace('![\xC0-\xC1\xF5-\xFF]|\xE0[\x80-\x9F][\x80-\xbf]|\xF0[\x80-\x8F][\x80-\xBF][\x80-\xBF]!', '', $input), 'UTF-8', 'UTF-8');
 
 		if ($test != $input){
 
