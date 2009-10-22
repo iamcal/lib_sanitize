@@ -31,9 +31,22 @@
 
 	test_summary();
 
-	function test_sanitize($in, $type, $out){
+
+
+
+	function test_sanitize($in, $type, $out, $name=null){
+		$GLOBALS[tests][sanitize]++;
+		if (!isset($name)) $name = "Unknown sanatize test {$GLOBALS[tests][sanitize]} ($type)";
+
 		$got = sanitize($in, $type);
-		test_harness($in, $out, $got, "Sanitize test ".++$GLOBALS[tests][sanitize]." ($type)");
+		test_harness($in, $out, $got, $name);
 	}
 
+	function test_string($in, $out, $name=null){
+		$GLOBALS[tests][string]++;
+		if (!isset($name)) $name = "Unknown string test ".$GLOBALS[tests][string];
+
+		$got = sanitize($in, 'str');
+		test_harness($in, $out, $got, $name);
+	}
 ?>

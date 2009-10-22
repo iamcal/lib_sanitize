@@ -210,12 +210,4 @@ if (0){
 
 	test_summary();
 
-	function test_string($in, $out, $name=null){
-		$GLOBALS[tests][string]++;
-		if (!isset($name)) $name = "Unknown string test ".$GLOBALS[tests][string];		
-
-		$got = sanitize($in, 'str');
-		test_harness($in, $out, $got, $name);
-	}
-
 ?>

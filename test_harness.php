@@ -78,7 +78,9 @@
 		$out = '';
 		for ($i=0; $i<strlen($s); $i++){
 			$c = ord(substr($s,$i,1));
-			if ($c >= 0x20 && $c <= 0x7f){
+			if ($c == 0x0A){
+				$out .= '<span style="color: blue">[\\n]</span>';
+			}elseif ($c >= 0x20 && $c <= 0x7f){
 				$out .= htmlentities(chr($c));
 			}else{
 				$out .= '<span style="color: blue">'.sprintf('[%02X]', $c)."</span>";
@@ -111,5 +113,9 @@
 		# 1 byte
 		return chr($i);
 	}
+
+
+
+
 
 ?>
