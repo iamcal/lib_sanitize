@@ -130,20 +130,35 @@
 	# 3 byte: 11100000 100xxxxx 10xxxxxx
 	# 4 byte: 11110000 1000xxxx 10xxxxxx 10xxxxxx
 	#
-	# Note: it appears that we convert them down into
-	# the correct number of bytes, if that would be more than 1?
+
+	test_string("a\xC0\x80b", "ab", "lowest overlong 2-byte = U+0000");
+	test_string("a\xC1\xBFb", "ab", "highest overlong 2-byte - U+007F");
+
+	#
+	# the lowest valid 2-byte would be U+0080, but that's a control character.
+	# A0 is the first non-control after that (it's a non-breaking space)
 	#
 
-	test_string("a\xC0\x80b", "ab", "lowest overlong 2-byte");
-	test_string("a\xC1\xBFb", "ab", "highest overlong 2-byte");
+	test_string("a\xC2\xA0b", "a\xC2\xA0b", "lowest valid 2-byte - U+00A0");
+	test_string("a\xDF\xBFb", "a\xDF\xBfb", "highest valid 2-byte - U+07FF");
 
-	test_string("a\xE0\x80\x80b", "ab", "lowest overlong 3-byte");
-	test_string("a\xE0\x9F\xBFb", "ab", "highest overlong 3-byte");
+	test_string("a\xE0\x80\x80b", "ab", "lowest overlong 3-byte - U+0000");
+	test_string("a\xE0\x9F\xBFb", "ab", "highest overlong 3-byte - U+07FF");
 
-	test_string("a\xF0\x80\x80\x80b", "ab", "lowest overlong 4-byte");
-	test_string("a\xF0\x8F\xBF\xBFb", "ab", "highest overlong 4-byte");
+	test_string("a\xe0\xa0\x80b", "a\xe0\xa0\x80b", "lowest valid 3-byte - U+0800");
+	test_string("a\xEF\xBF\xBFb", "a\xEF\xBF\xBFb", "highest valid 3-byte - U+FFFF");
 
-	# TODO: overlong 5 & 6 bytes
+	test_string("a\xF0\x80\x80\x80b", "ab", "lowest overlong 4-byte - U+0000");
+	test_string("a\xF0\x8F\xBF\xBFb", "ab", "highest overlong 4-byte - U+FFFF");
+
+	test_string("a\xf0\x90\x80\x80b", "a\xf0\x90\x80\x80b", "lowest valid 4-byte - U+10000");
+	test_string("a\xf4\x8f\xbf\xbfb", "a\xf4\x8f\xbf\xbfb", "highest valid 4-byte - U+10FFFF");
+
+	test_string("a\xF8\x80\x80\x80\x80b", "ab", "lowest overlong 5-byte - U+0000");
+	test_string("a\xF8\x87\xBF\xBF\xBFb", "ab", "highest overlong 5-byte - U+1FFFFF");
+
+	test_string("a\xFC\x80\x80\x80\x80\x80b", "ab", "lowest overlong 6-byte - U+0000");
+	test_string("a\xFC\x83\xBF\xBF\xBF\xBFb", "ab", "highest overlong 6-byte - U+3FFFFFF");
 
 	###########################################################################################
 
