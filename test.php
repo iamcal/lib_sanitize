@@ -7,10 +7,23 @@
 
 	test_start();
 
-	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
+	define('RUN_TESTS_BAD_BYTES'		, 1);
+	define('RUN_TESTS_LEADS_TRAILS'		, 1);
+	define('RUN_TESTS_OUT_OF_RANGE'		, 1);
+	define('RUN_TESTS_OVERLONG'		, 1);
+	define('RUN_TESTS_REPLACE'		, 1);
+	define('RUN_TESTS_CONVERT_FROM'		, 1);
+	define('RUN_TESTS_THROW'		, 1);
+	define('RUN_TESTS_INPUT_CONVERSION'	, 1);
+	define('RUN_TESTS_BASICS'		, 1);
+
 
 	###########################################################################################
-if (0){
+
+if (RUN_TESTS_BAD_BYTES){
+
+	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
+
 	#
 	# make sure we filter out bytes that are never valid UTF-8
 	#
@@ -34,7 +47,11 @@ if (0){
 	test_string("hello\xFEworld", "helloworld", "invalid byte FE");
 	test_string("hello\xFFworld", "helloworld", "invalid byte FF");
 
+}
+
 	###########################################################################################
+
+if (RUN_TESTS_LEADS_TRAILS){
 
 	#
 	# make sure we strip stray leading and trailing bytes
@@ -88,7 +105,11 @@ if (0){
 	test_string("a\xF0\xA0\x80\x80b", "a\xF0\xA0\x80\x80b",		"3 leader w/ 3 trail");
 	test_string("a\xF0\xA0\x80\x80\x80b", "a\xF0\xA0\x80\x80b",	"3 leader w/ 4 trail");
 
+}
+
 	###########################################################################################
+
+if (RUN_TESTS_OUT_OF_RANGE){
 
 	#
 	# encodings that are out of range
@@ -124,7 +145,11 @@ if (0){
 	test_string("a\xFD\x80\x80\x80\x80\x80b", "ab", "lowest 6-byte starting with FD - U+40000000");
 	test_string("a\xFD\xBF\xBF\xBF\xBF\xBFb", "ab", "highest 6-byte starting with FD - U+7FFFFFFF");
 
+}
+
 	###########################################################################################
+
+if (RUN_TESTS_OVERLONG){
 
 	#
 	# check we remove overlong encodings (using 3 bytes when only 2 were needed)
@@ -165,57 +190,55 @@ if (0){
 }
 	###########################################################################################
 
+if (RUN_TESTS_CONVERT_FROM){
 
 	#
-	# test the replacement mode
+	# test invalid conversion
 	#
-if (0){
 
-	$GLOBALS[sanatize_mode]		= SANATIZE_INVALID_REPLACE;
-	$GLOBALS[sanatize_replace]	= ord('!');
+	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_CONVERT;
+	$GLOBALS[sanatize_convert_from] = 'ISO-8859-1';
 
-	test_string("hello\xC0world", "hello!world");
-	test_string("hello\xF5world", "hello!world");
+	test_string("\x76", "\x76", "Latin-1 fallback 0x76");
+	test_string("\xEB", "\xc3\xab", "Latin-1 fallback 0xEB");
+	test_string("H\xEBllo", "H\xc3\xabllo", "Latin-1 fallback word");
 
-	test_string("a\x41b", "a\x41b");	# 0 leader w/ 0 trail
-	test_string("a\x41\xBFb", "a\x41b");	# 0 leader w/ 1 trail
-
-	test_string("a\xC2b", "ab");			# 1 leader w/ 0 trail
-	test_string("a\xC2\xBFb", "a\xC2\xBFb");	# 1 leader w/ 1 trail
-	test_string("a\xC2\xBF\xBFb", "a\xC2\xBFb");	# 1 leader w/ 2 trail
-
-	test_string("a\xE0b", "ab");				# 2 leader w/ 0 trail
-	test_string("a\xE0\xBFb", "ab");			# 2 leader w/ 1 trail
-	test_string("a\xE0\xBF\xBFb", "a\xE0\xBF\xBFb");	# 2 leader w/ 2 trail
-	test_string("a\xE0\xBF\xBF\xBFb", "a\xE0\xBF\xBFb");	# 2 leader w/ 3 trail
-
-	test_string("a\xF0b", "ab");					# 3 leader w/ 0 trail
-	test_string("a\xF0\xBFb", "ab");				# 3 leader w/ 1 trail
-	test_string("a\xF0\xBF\xBFb", "ab");				# 3 leader w/ 2 trail
-	test_string("a\xF0\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb");	# 3 leader w/ 3 trail
-	test_string("a\xF0\xBF\xBF\xBF\xBFb", "a\xF0\xBF\xBF\xBFb");	# 3 leader w/ 4 trail
-
-	test_string("a\xC0\x80b", "ab"); # lowest bad 2-byte
-	test_string("a\xC1\xBFb", "ab"); # highest bad 2-byte
-
-	test_string("a\xE0\x80\x80b", "ab"); # lowest bad 3-byte
-	test_string("a\xE0\x9F\xBFb", "ab"); # lowest bad 3-byte
-
-	test_string("a\xF0\x80\x80\x80b", "ab"); # lowest bad 4-byte
-	test_string("a\xF0\x8F\xBF\xBFb", "ab"); # lowest bad 4-byte
 }
 
-	#define('SANATIZE_INVALID_THROW',	3); # throw an error
-	#define('SANATIZE_INVALID_CONVERT',	4); # convert from another encoding
-	#$GLOBALS[sanatize_convert_from]	= 'ISO-8859-1'; # Latin-1
+	###########################################################################################
+
+if (RUN_TESTS_THROW){
+
+	#
+	# test invalid exceptions
+	#
+
+	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_THROW;
+	
+}
+	###########################################################################################
+
+if (RUN_TESTS_BAD_MODE){
+
+	#
+	# test a non-existent mode
+	#
+
+	$GLOBALS[sanatize_mode]		= 1000;
+
+	test_string("hello\xC0world", "ERROR: Unknown sanatize mode");
+}
 
 	###########################################################################################
+
+
+if (RUN_TESTS_INPUT_CONVERSION){
 
 	#
 	# test input conversion
 	#
 
-	$GLOBALS[sanatize_mode]			= SANATIZE_INVALID_STRIP;
+	$GLOBALS[sanatize_mode]	= SANATIZE_INVALID_STRIP;
 
 
 	#
@@ -311,8 +334,18 @@ if (0){
 	test_string("\xBE", "\xc5\xb8", "ISO-8859-15 0xBE -> U+0178");
 
 
+	#
+	# remember to reset this, or further tests will get fucked up
+	#
+
+	$GLOBALS[sanatize_input_encoding]	= 'UTF-8';
+
+}
+
 	###########################################################################################
-if (0){
+
+if (RUN_TESTS_BASICS){
+
 	#
 	# basics
 	#

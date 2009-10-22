@@ -162,11 +162,15 @@
 				case SANATIZE_INVALID_CONVERT:
 					mb_substitute_character(0xFFFD);
 
-					$input = mb_convert_encoding($input, $GLOBALS[sanatize_convert_from], 'UTF-8');
+					$input = mb_convert_encoding($input, 'UTF-8', $GLOBALS[sanatize_convert_from]);
 					break;
 
 				case SANATIZE_INVALID_STRIP:
 					$input = $test;
+					break;
+
+				default:
+					$input = "ERROR: Unknown sanatize mode";
 			}
 		}
 
