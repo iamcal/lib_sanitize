@@ -1,10 +1,13 @@
 <?
-	include("lib_sanitize.php");
-	include("test_harness.php");
+	#
+	# $Id$
+	#
 
+	include("lib_sanitize.php");
+
+	test_start();
 
 	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
-
 
 	###########################################################################################
 
@@ -206,8 +209,163 @@ if (0){
 	#define('SANATIZE_INVALID_CONVERT',	4); # convert from another encoding
 	#$GLOBALS[sanatize_convert_from]	= 'ISO-8859-1'; # Latin-1
 
+	###########################################################################################
+
+	#
+	# basics
+	#
+
+	test_sanitize("", "str", "");
+	test_sanitize("hello", "str", "hello");
+	test_sanitize(1, "str", "1");
+
+
+	#
+	# carriage return normalization
+	#
+
+	test_sanitize(c8(0x2028), 'str', " ");
+	test_sanitize(c8(0x2028), 'str_multi', "\n");
+
+	test_sanitize(c8(0x2029), 'str', " ");
+	test_sanitize(c8(0x2029), 'str_multi', "\n\n");
 
 
 	test_summary();
 
+
+
+
+	###########################################################################################
+
+	function test_start(){
+
+		$GLOBALS[tests] = array();
+		$GLOBALS[verbose] = $_GET[verbose];
+
+		echo '<table border="1">';
+		echo "<tr>\n";
+		echo "<th>Name</th>";
+		echo "<th>Status</th>";
+		echo "<th>Input</th>";
+		echo "<th>Expected</th>";
+		echo "<th>Got</th>";
+		echo "</tr>\n";
+	}
+
+	function test_harness($in, $out, $got, $name){
+
+		$output = 0;
+		$pass = 0;
+
+		if ($out === $got){
+			$GLOBALS[test_passed]++;
+			if ($GLOBALS[verbose]){
+				$pass = 1;
+				$output = 1;
+			}
+		}else{
+			$GLOBALS[test_failed]++;
+			$output = 1;
+		}
+		if ($output){
+			if ($GLOBALS[verbose] || ($out != $got)){
+				$out_type = gettype($out);
+				$got_type = gettype($got);
+
+				echo "<tr>\n";
+				echo "\t<td>".HtmlSpecialChars($name)."</td>\n";
+				if ($pass){
+					echo "\t<td style=\"color: green\">pass</td>\n";
+				}else{
+					echo "\t<td style=\"background-color: red; color: white\">fail</td>\n";
+				}
+				echo "\t<td>".byteify($in)."</td>\n";
+
+				if ($out_type == $got_type){
+					echo "\t<td>".byteify($out)."</td>\n";
+					echo "\t<td>".byteify($got)."</td>\n";
+				}else{
+					echo "\t<td>$out_type:".byteify($out)."</td>\n";
+					echo "\t<td>$got_type:".byteify($got)."</td>\n";
+				}
+
+				echo "</tr>\n";
+			}
+		}
+	}
+
+	function test_summary(){
+
+		echo '</table>';
+
+		$total = $GLOBALS[test_passed] + $GLOBALS[test_failed];
+		$percent = Round(10000 * $GLOBALS[test_passed] / $total) / 100;
+
+		echo "<br />\n";
+		echo "Passed $GLOBALS[test_passed] of $total tests ($percent%)<br />\n";
+		echo "<br />";
+
+		if ($GLOBALS[verbose]){
+			echo '<a href="test.php">Hide test details</a>';
+		}else{
+			echo '<a href="test.php?verbose=1">Show test details</a>';
+		}
+	}
+
+	function byteify($s){
+		$out = '';
+		for ($i=0; $i<strlen($s); $i++){
+			$c = ord(substr($s,$i,1));
+			if ($c == 0x0A){
+				$out .= '<span style="color: blue">[\\n]</span>';
+			}elseif ($c >= 0x20 && $c <= 0x7f){
+				$out .= htmlentities(chr($c));
+			}else{
+				$out .= '<span style="color: blue">'.sprintf('[%02X]', $c)."</span>";
+			}
+		}
+		return trim($out);
+	}
+
+	function c8($i){
+		# encode a unicode code point into UTF-8
+
+		if ($i > 0x10000){ # 4 byte
+			return	 chr(0xF0 | (($i & 0x1C0000) >> 18))
+				.chr(0x80 | (($i & 0x3F000) >> 12))
+				.chr(0x80 | (($i & 0xFC0) >> 6))
+				.chr(0x80 | ($i & 0x3F));
+		}
+
+		if ($i > 0x800){ # 3 byte
+			return	 chr(0xE0 | (($i & 0xF000) >> 12))
+				.chr(0x80 | (($i & 0xFC0) >> 6))
+				.chr(0x80 | ($i & 0x3F));
+		}
+
+		if ($i > 0x80){ # 2 byte
+			return	 chr(0xC0 | (($i & 0x7C0) >> 6))
+				.chr(0x80 | ($i & 0x3F));
+		}
+
+		# 1 byte
+		return chr($i);
+	}
+
+	function test_sanitize($in, $type, $out, $name=null){
+		$GLOBALS[tests][sanitize]++;
+		if (!isset($name)) $name = "Unknown sanatize test {$GLOBALS[tests][sanitize]} ($type)";
+
+		$got = sanitize($in, $type);
+		test_harness($in, $out, $got, $name);
+	}
+
+	function test_string($in, $out, $name=null){
+		$GLOBALS[tests][string]++;
+		if (!isset($name)) $name = "Unknown string test ".$GLOBALS[tests][string];
+
+		$got = sanitize($in, 'str');
+		test_harness($in, $out, $got, $name);
+	}
 ?>
