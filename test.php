@@ -384,7 +384,12 @@ if (RUN_TESTS_BASICS){
 		$GLOBALS['verbose'] = isset($_GET['verbose']) ? 1 : 0;
 		$GLOBALS['test_passed'] = 0;
 		$GLOBALS['test_failed'] = 0;
+		$GLOBALS['test_header_done'] = 0;
+	}
 
+	function test_header(){
+		if ($GLOBALS['test_header_done']) return;
+		$GLOBALS['test_header_done'] = 1;
 		echo '<table border="1">';
 		echo "<tr>\n";
 		echo "<th>Name</th>";
@@ -415,6 +420,8 @@ if (RUN_TESTS_BASICS){
 				$out_type = gettype($out);
 				$got_type = gettype($got);
 
+				test_header();
+
 				echo "<tr>\n";
 				echo "\t<td>".HtmlSpecialChars($name)."</td>\n";
 				if ($pass){
@@ -439,7 +446,9 @@ if (RUN_TESTS_BASICS){
 
 	function test_summary(){
 
-		echo '</table>';
+		if ($GLOBALS['test_header_done']){
+			echo '</table>';
+		}
 
 		$total = $GLOBALS['test_passed'] + $GLOBALS['test_failed'];
 		if ($total){
