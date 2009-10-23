@@ -92,15 +92,18 @@
 	# trailing bytes (BF = 10111111) by themselves are bad
 	#
 
-	test_string("a\xBFb", "ab",	"lone trail");
+	test_string("a\xBFb",		"ab",	"lone trail");
+	test_string("a\xBF\xBFb",	"ab",	"2 lone trails");
+	test_string("a\xBF\xBF\xBFb",	"ab",	"3 lone trails");
 
 
 	#
 	# bytes with the highest bit unset (like x41) can't have trailers
 	#
 
-	test_string("a\x41b", "a\x41b",		"0 leader w/ 0 trail");
-	test_string("a\x41\xBFb", "a\x41b",	"0 leader w/ 1 trail");
+	test_string("a\x41b",		"a\x41b", "0 leader w/ 0 trail");
+	test_string("a\x41\xBFb",	"a\x41b", "0 leader w/ 1 trail");
+	test_string("a\x41\xBF\xBFb",	"a\x41b", "0 leader w/ 2 trail");
 
 
 	#
@@ -135,6 +138,31 @@
 	test_string("a\xF0\xA0\x80b", "ab",				"3 leader w/ 2 trail");
 	test_string("a\xF0\xA0\x80\x80b", "a\xF0\xA0\x80\x80b",		"3 leader w/ 3 trail");
 	test_string("a\xF0\xA0\x80\x80\x80b", "a\xF0\xA0\x80\x80b",	"3 leader w/ 4 trail");
+
+
+	#
+	# some runs of leaders to check we're not skipping any bytes
+	# (the pure php filter couldn't do these at one point)
+	#
+
+	test_string("a\xC2\xC2\xBFb", "a\xC2\xBFb",			"2L1 1T");
+	test_string("a\xC2\xC2\xBF\xBFb", "a\xC2\xBFb",			"2L1 2T");
+
+	test_string("a\xE1\xE1\x80\x80b", "a\xE1\x80\x80b",		"2L2 2T");
+	test_string("a\xE1\xE1\x80\x80\x80b", "a\xE1\x80\x80b",		"2L2 3T");
+	test_string("a\xE1\xE1\xE1\x80\x80\x80b", "a\xE1\x80\x80b",	"3L2 3T");
+
+	test_string("a\xE1\x80\xE1\xE1\x80\x80\x80b", "a\xE1\x80\x80b",	"L2 T 2L2 3T");
+
+	test_string("\xC2\xC2\xBF", "\xC2\xBF",				"2L1 1T at egdes");
+	test_string("\xC2\xC2\xBF\xBF", "\xC2\xBF",			"2L1 2T at egdes");
+
+	test_string("\xE1\xE1\x80\x80", "\xE1\x80\x80",			"2L2 2T at egdes");
+	test_string("\xE1\xE1\x80\x80\x80", "\xE1\x80\x80",		"2L2 3T at egdes");
+	test_string("\xE1\xE1\xE1\x80\x80\x80", "\xE1\x80\x80",		"3L2 3T at egdes");
+
+	test_string("\xE1\x80\xE1\xE1\x80\x80\x80", "\xE1\x80\x80",	"L2 T 2L2 3T at egdes");
+	
 
 	}
 

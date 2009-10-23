@@ -294,16 +294,16 @@
 	function sanitize_clean_utf8($data){
 
 		$rx = '';
-		$rx .= '([\xC0-\xC1\xF5-\xFF])';			# invalid bytes
-		$rx .= '|([\xC0-\xDF](?=[^\x80-\xBF]|$))';		# 1-leader without a trailer
-		$rx .= '|([\xE0-\xEF].{0,1}?(?=([^\x80-\xBF]|$)))';	# 2-leader without 2 trailers
-		$rx .= '|([\xF0-\xF7].{0,2}?(?=([^\x80-\xBF]|$)))';	# 3-leader without 3 trailers
-		$rx .= '|((?<=[\x00-\x7F])[\x80-\xBF]+)';		# trailer following a non-leader
-		$rx .= '|((?<=[\xC0-\xDF].)[\x80-\xBF]+)';		# 1 leader with too many trailers
-		$rx .= '|((?<=[\xE0-\xEF]..)[\x80-\xBF]+)';		# 2 leader with too many trailers
-		$rx .= '|((?<=[\xF0-\xF7]...)[\x80-\xBF]+)';		# 3 leader with too many trailers
-		$rx .= '|(\xE0[\x80-\x9F])';				# overlong 3-byte
-		$rx .= '|(\xF0[\x80-\x8F])';				# overlong 4-byte
+		$rx .= '([\xC0-\xC1\xF5-\xFF])';				# invalid bytes
+		$rx .= '|([\xC0-\xDF](?=[^\x80-\xBF]|$))';			# 1-leader without a trailer
+		$rx .= '|([\xE0-\xEF](?=[\x80-\xBF]{0,1}([^\x80-\xBF]|$)))';	# 2-leader without 2 trailers
+		$rx .= '|([\xF0-\xF7](?=[\x80-\xBF]{0,2}([^\x80-\xBF]|$)))';	# 3-leader without 3 trailers
+		$rx .= '|((?<=[\x00-\x7F]|^)[\x80-\xBF]+)';			# trailer following a non-leader
+		$rx .= '|((?<=[\xC0-\xDF][\x80-\xBF]{1})[\x80-\xBF]+)';		# 1 leader with too many trailers
+		$rx .= '|((?<=[\xE0-\xEF][\x80-\xBF]{2})[\x80-\xBF]+)';		# 2 leader with too many trailers
+		$rx .= '|((?<=[\xF0-\xF7][\x80-\xBF]{3})[\x80-\xBF]+)';		# 3 leader with too many trailers
+		$rx .= '|(\xE0[\x80-\x9F])';					# overlong 3-byte
+		$rx .= '|(\xF0[\x80-\x8F])';					# overlong 4-byte
 
 
 		#
