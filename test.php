@@ -3,7 +3,8 @@
 <ul>
 	<li> The tests for iconv will fail if you don't have the iconv extension. </li>
 	<li> The tests for mbstring will fail if you don't have the mbstring extension. </li>
-	<li> If you're on windows, 6 iconv tests may fail because iconv can't do ISO-2022-JP conversion. </li>
+	<li> Iconv can't do ISO-2022-JP conversion (tested on windows & fedora). </li>
+	<li> Pure-PHP mode skips all the encoding conversion tests apart from Latin-1. </li>
 </ul>
 
 <?
@@ -297,7 +298,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# 208-1983 is escaped with 0x1B 0x24($) 0x42(B)
 	#
 
-	if ($extension != SANITIZE_EXTENSION_PHP){
+	if ($extension != SANITIZE_EXTENSION_PHP && $extension != SANITIZE_EXTENSION_ICONV){
 
 		$GLOBALS['sanitize_input_encoding'] = 'ISO-2022-JP';
 

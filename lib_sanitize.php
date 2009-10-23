@@ -267,8 +267,11 @@
 				#
 				# to fix this, we append some characters and then remove them afterwards.
 				#
+				# we also need to silence the call, since it complains on my fedora box
+				# even when it succeeds in //IGNORE'ing certain errors. go iconv!
+				#
 
-				return substr(iconv($from, 'UTF-8//IGNORE', sanitize_strip_overlong($input).'XXXX'), 0, -4);
+				return substr(@iconv($from, 'UTF-8//IGNORE', sanitize_strip_overlong($input).'XXXX'), 0, -4);
 		}
 
 		throw new Exception('Unknown sanitize extension');
