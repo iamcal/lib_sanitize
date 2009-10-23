@@ -1,8 +1,8 @@
 <h1>lib_sanitize Tests</h1>
 
 <ul>
-	<li> The tests for iconv will fail if you don't have the iconv extension. </li>
 	<li> The tests for mbstring will fail if you don't have the mbstring extension. </li>
+	<li> The tests for iconv will fail if you don't have the iconv extension. </li>
 	<li> Iconv can't do ISO-2022-JP conversion (tested on windows & fedora). </li>
 	<li> Pure-PHP mode skips all the encoding conversion tests apart from Latin-1. </li>
 </ul>

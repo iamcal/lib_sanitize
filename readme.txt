@@ -30,6 +30,7 @@ USAGE
 	$c = request_str_multi('key_name');	# $_REQUEST
 
 
+
 	# the default mode - strip out bad UTF-8
 	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
 
@@ -41,8 +42,21 @@ USAGE
 	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_THROW;
 
 
+
 	# if you know your input encoding, set it first (all input is converted to UTF-8)
 	$GLOBALS[sanatize_input_encoding] = 'SJIS'; # Shift-JIS
+
+
+
+	# if you don't have mbstring, you can use iconv instead
+	$GLOBALS['sanitize_extension'] = SANITIZE_EXTENSION_ICONV;
+
+	# if you don't have iconv either, you can use pure php
+	$GLOBALS['sanitize_extension'] = SANITIZE_EXTENSION_PHP;
+
+	# mbstring (the default) is the fastest.
+	# iconv is still fast, but slower than mbstring and supports less encodings.
+	# pure php mode only supports UTF-8 and ISO-8859-1 (Latin-1) and is very slow.
 ?>
 
 
