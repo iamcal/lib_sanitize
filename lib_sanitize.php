@@ -239,6 +239,9 @@
 
 			case SANITIZE_EXTENSION_MBSTRING:
 
+				if (!function_exists('mb_substitute_character')) return 'NO-MBSTRING-SUPPORT';
+				if (!function_exists('mb_convert_encoding')) return 'NO-MBSTRING-SUPPORT';
+
 				if ($from == 'UTF-8'){
 
 					#
@@ -258,6 +261,8 @@
 				return mb_convert_encoding($input, 'UTF-8', $from);
 
 			case SANITIZE_EXTENSION_ICONV:
+
+				if (!function_exists('iconv')) return 'NO-ICONV-SUPPORT';
 
 				#
 				# iconv is, alas, fucking retarded. it acts incorrectly, throwing a notice
