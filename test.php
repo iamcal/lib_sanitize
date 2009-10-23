@@ -51,7 +51,7 @@
 
 	###########################################################################################
 
-if (RUN_TESTS_BAD_BYTES){
+	if (RUN_TESTS_BAD_BYTES){
 
 	$GLOBALS['sanitize_mode'] = SANITIZE_INVALID_STRIP;
 
@@ -78,11 +78,11 @@ if (RUN_TESTS_BAD_BYTES){
 	test_string("hello\xFEworld", "helloworld", "invalid byte FE");
 	test_string("hello\xFFworld", "helloworld", "invalid byte FF");
 
-}
+	}
 
 	###########################################################################################
 
-if (RUN_TESTS_LEADS_TRAILS){
+	if (RUN_TESTS_LEADS_TRAILS){
 
 	#
 	# make sure we strip stray leading and trailing bytes
@@ -136,11 +136,11 @@ if (RUN_TESTS_LEADS_TRAILS){
 	test_string("a\xF0\xA0\x80\x80b", "a\xF0\xA0\x80\x80b",		"3 leader w/ 3 trail");
 	test_string("a\xF0\xA0\x80\x80\x80b", "a\xF0\xA0\x80\x80b",	"3 leader w/ 4 trail");
 
-}
+	}
 
 	###########################################################################################
 
-if (RUN_TESTS_OUT_OF_RANGE){
+	if (RUN_TESTS_OUT_OF_RANGE){
 
 	#
 	# encodings that are out of range
@@ -176,11 +176,11 @@ if (RUN_TESTS_OUT_OF_RANGE){
 	test_string("a\xFD\x80\x80\x80\x80\x80b", "ab", "lowest 6-byte starting with FD - U+40000000");
 	test_string("a\xFD\xBF\xBF\xBF\xBF\xBFb", "ab", "highest 6-byte starting with FD - U+7FFFFFFF");
 
-}
+	}
 
 	###########################################################################################
 
-if (RUN_TESTS_OVERLONG){
+	if (RUN_TESTS_OVERLONG){
 
 	#
 	# check we remove overlong encodings (using 3 bytes when only 2 were needed)
@@ -218,10 +218,12 @@ if (RUN_TESTS_OVERLONG){
 
 	test_string("a\xFC\x80\x80\x80\x80\x80b", "ab", "lowest overlong 6-byte - U+0000");
 	test_string("a\xFC\x83\xBF\xBF\xBF\xBFb", "ab", "highest overlong 6-byte - U+3FFFFFF");
-}
+
+	}
+
 	###########################################################################################
 
-if (RUN_TESTS_CONVERT_FROM){
+	if (RUN_TESTS_CONVERT_FROM){
 
 	#
 	# test invalid conversion
@@ -234,11 +236,11 @@ if (RUN_TESTS_CONVERT_FROM){
 	test_string("\xEB", "\xc3\xab", "Latin-1 fallback 0xEB");
 	test_string("H\xEBllo", "H\xc3\xabllo", "Latin-1 fallback word");
 
-}
+	}
 
 	###########################################################################################
 
-if (RUN_TESTS_THROW){
+	if (RUN_TESTS_THROW){
 
 	#
 	# test invalid exceptions
@@ -246,10 +248,11 @@ if (RUN_TESTS_THROW){
 
 	$GLOBALS['sanitize_mode'] = SANITIZE_INVALID_THROW;
 	
-}
+	}
+
 	###########################################################################################
 
-if (RUN_TESTS_BAD_MODE){
+	if (RUN_TESTS_BAD_MODE){
 
 	#
 	# test a non-existent mode
@@ -258,12 +261,12 @@ if (RUN_TESTS_BAD_MODE){
 	$GLOBALS['sanitize_mode']		= 1000;
 
 	test_exception('sanitize("hello\xC0world", "str");', 'Unknown sanitize mode exception');
-}
+
+	}
 
 	###########################################################################################
 
-
-if (RUN_TESTS_INPUT_CONVERSION){
+	if (RUN_TESTS_INPUT_CONVERSION){
 
 	#
 	# test input conversion
@@ -386,7 +389,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 
 	$GLOBALS['sanitize_input_encoding']	= 'UTF-8';
 
-}
+	}
 
 	###########################################################################################
 
@@ -401,7 +404,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 
 	###########################################################################################
 
-if (RUN_TESTS_BASICS){
+	if (RUN_TESTS_BASICS){
 
 	#
 	# basics
@@ -421,11 +424,20 @@ if (RUN_TESTS_BASICS){
 
 	test_sanitize(c8(0x2029), 'str', " ");
 	test_sanitize(c8(0x2029), 'str_multi', "\n\n");
-}
+
+	#
+	# TODO: lots more tests here
+	#
+
+	}
 
 	###########################################################################################
 
-	
+	#
+	# TODO: bidi balancing tests
+	#
+
+	###########################################################################################
 
 	test_summary();
 
