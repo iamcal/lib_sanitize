@@ -27,13 +27,19 @@
 	# what to do when invalid 
 	#
 
-	define('SANATIZE_INVALID_STRIP',	1); # strip out the offending bytes
-	define('SANATIZE_INVALID_THROW',	2); # throw an error
-	define('SANATIZE_INVALID_CONVERT',	3); # convert from another encoding
+	define('SANITIZE_INVALID_STRIP',	1); # strip out the offending bytes
+	define('SANITIZE_INVALID_THROW',	2); # throw an error
+	define('SANITIZE_INVALID_CONVERT',	3); # convert from another encoding
 
-	$GLOBALS['sanatize_mode']		= SANATIZE_INVALID_STRIP;
-	$GLOBALS['sanatize_convert_from']	= 'ISO-8859-1'; # Latin-1
-	$GLOBALS['sanatize_input_encoding']	= 'UTF-8';
+	define('SANITIZE_EXTENSION_PHP',	1); # pure php conversion (slow!)
+	define('SANITIZE_EXTENSION_MBSTRING',	2); # the default
+	define('SANITIZE_EXTENSION_ICONV',	3); # an alternative
+
+
+	$GLOBALS['sanitize_mode']		= SANITIZE_INVALID_STRIP;
+	$GLOBALS['sanitize_extension']		= SANITIZE_EXTENSION_MBSTRING;
+	$GLOBALS['sanitize_convert_from']	= 'ISO-8859-1'; # Latin-1
+	$GLOBALS['sanitize_input_encoding']	= 'UTF-8';
 
 	##############################################################################
 
@@ -130,47 +136,36 @@
 		# first, do we need to convert from another character set or encoding?
 		#
 
-		if ($GLOBALS['sanatize_input_encoding'] != 'UTF-8'){
+		if ($GLOBALS['sanitize_input_encoding'] != 'UTF-8'){
 
-			mb_substitute_character(0xFFFD);
-			$input = mb_convert_encoding($input, 'UTF-8', $GLOBALS['sanatize_input_encoding']);
-		}
+			$input = sanitize_convert_string($input, $GLOBALS['sanitize_input_encoding'], 'UTF-8');
 
+		}else{
 
-		#
-		# next, check that it's valid UTF-8
-		#
-		# we strip out several things before feeding it into the convertor, since the convertor
-		# tries to do some fixing, while we'd rather it just gave up on bad codes.
-		#
-		# invalid bytes: C0-C1, F5-FF
-		# overlong 3 bytes: E0[80-9F][80-BF]
-		# overlong 4 bytes: F0[80-8F][80-BF][80-BF]
-		#
+			#
+			# if we didn't convert from a different character set, check that it's valid UTF-8
+			#
 
-		mb_substitute_character('long');
+			$test = sanitize_convert_string($input, 'UTF-8', 'UTF-8');
 
-		$test = mb_convert_encoding(preg_replace('![\xC0-\xC1\xF5-\xFF]|\xE0[\x80-\x9F][\x80-\xbf]|\xF0[\x80-\x8F][\x80-\xBF][\x80-\xBF]!', '', $input), 'UTF-8', 'UTF-8');
+			if ($test != $input){
 
-		if ($test != $input){
+				switch ($GLOBALS['sanitize_mode']){
 
-			switch ($GLOBALS['sanatize_mode']){
+					case SANITIZE_INVALID_THROW:
+						throw new Exception('Sanitize found invalid input');
 
-				case SANATIZE_INVALID_THROW:
-					throw new Exception('Sanatize found invalid input');
+					case SANITIZE_INVALID_CONVERT:
+						$input = sanitize_convert_string($input, $GLOBALS['sanitize_convert_from']);
+						break;
 
-				case SANATIZE_INVALID_CONVERT:
-					mb_substitute_character(0xFFFD);
+					case SANITIZE_INVALID_STRIP:
+						$input = $test;
+						break;
 
-					$input = mb_convert_encoding($input, 'UTF-8', $GLOBALS['sanatize_convert_from']);
-					break;
-
-				case SANATIZE_INVALID_STRIP:
-					$input = $test;
-					break;
-
-				default:
-					$input = "ERROR: Unknown sanatize mode";
+					default:
+						throw new Exception('Unknown sanitize mode');
+				}
 			}
 		}
 
@@ -219,6 +214,97 @@
 		#
 
 		return $input;
+	}
+
+	##############################################################################
+
+	function sanitize_convert_string($input, $from){
+
+
+		switch ($GLOBALS['sanitize_extension']){
+
+			case SANITIZE_EXTENSION_PHP:
+				if ($from == 'ISO-8859-1'){
+
+					return utf8_encode($input);
+				}
+
+				if ($from == 'UTF-8'){
+
+					return sanitize_clean_utf8($input);
+				}
+
+				throw new Exception('Pure PHP sanitize can only convert from ISO-8859-1');
+				return;
+
+			case SANITIZE_EXTENSION_MBSTRING:
+
+				if ($from == 'UTF-8'){
+
+					#
+					# we strip out several things before feeding it into the convertor, since the convertor
+					# tries to do some fixing, while we'd rather it just gave up on bad codes.
+					#
+					# invalid bytes: C0-C1, F5-FF
+					# overlong 3 bytes: E0[80-9F][80-BF]
+					# overlong 4 bytes: F0[80-8F][80-BF][80-BF]
+					#
+
+					mb_substitute_character('long');
+					return mb_convert_encoding(sanitize_strip_overlong($input), 'UTF-8', 'UTF-8');
+				}
+			
+				mb_substitute_character(0xFFFD);
+				return mb_convert_encoding($input, 'UTF-8', $from);
+
+			case SANITIZE_EXTENSION_ICONV:
+
+				#
+				# iconv is, alas, fucking retarded. it acts incorrectly, throwing a notice
+				# *only* if there's an invalid (short) multibyte sequence at the end of
+				# the input, even with //IGNORE. if the invalid sequence is in the middle of
+				# the string, it's fine.
+				#
+				# to fix this, we append some characters and then remove them afterwards.
+				#
+
+				return substr(iconv($from, 'UTF-8//IGNORE', sanitize_strip_overlong($input).'XXXX'), 0, -4);
+		}
+
+		throw new Exception('Unknown sanitize extension');
+	}
+
+	##############################################################################
+
+	function sanitize_strip_overlong($input){
+
+		return preg_replace('![\xC0-\xC1\xF5-\xFF]|\xE0[\x80-\x9F][\x80-\xbf]|\xF0[\x80-\x8F][\x80-\xBF][\x80-\xBF]!', '', $input);
+	}
+
+	##############################################################################
+
+	function sanitize_clean_utf8($data){
+
+		$rx = '';
+		$rx .= '([\xC0-\xC1\xF5-\xFF])';			# invalid bytes
+		$rx .= '|([\xC0-\xDF](?=[^\x80-\xBF]|$))';		# 1-leader without a trailer
+		$rx .= '|([\xE0-\xEF].{0,1}?(?=([^\x80-\xBF]|$)))';	# 2-leader without 2 trailers
+		$rx .= '|([\xF0-\xF7].{0,2}?(?=([^\x80-\xBF]|$)))';	# 3-leader without 3 trailers
+		$rx .= '|((?<=[\x00-\x7F])[\x80-\xBF]+)';		# trailer following a non-leader
+		$rx .= '|((?<=[\xC0-\xDF].)[\x80-\xBF]+)';		# 1 leader with too many trailers
+		$rx .= '|((?<=[\xE0-\xEF]..)[\x80-\xBF]+)';		# 2 leader with too many trailers
+		$rx .= '|((?<=[\xF0-\xF7]...)[\x80-\xBF]+)';		# 3 leader with too many trailers
+		$rx .= '|(\xE0[\x80-\x9F])';				# overlong 3-byte
+		$rx .= '|(\xF0[\x80-\x8F])';				# overlong 4-byte
+
+
+		#
+		# one of the reasons this is even slower than it needs to be is that
+		# we have to apply it twice. seems to be related to overlapping
+		# assertions, but that shouldn't be the case. argh!
+		#
+
+		return preg_replace("!$rx!s", '', preg_replace("!$rx!s", '', $data));
 	}
 
 	##############################################################################

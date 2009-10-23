@@ -1,3 +1,11 @@
+<h1>lib_sanitize Tests</h1>
+
+<ul>
+	<li> The tests for iconv will fail if you don't have the iconv extension. </li>
+	<li> The tests for mbstring will fail if you don't have the mbstring extension. </li>
+	<li> If you're on windows, 6 iconv tests may fail because iconv can't do ISO-2022-JP conversion. </li>
+</ul>
+
 <?
 	#
 	# $Id$
@@ -21,11 +29,30 @@
 	define('RUN_TESTS_BASICS'		, 1);
 
 
+
+	###########################################################################################
+
+	#
+	# we run all of these character encoding tests in all three extension modes
+	#
+
+	$extensions = array(
+		SANITIZE_EXTENSION_PHP		=> 'PHP',
+		SANITIZE_EXTENSION_MBSTRING	=> 'mbstring',
+		SANITIZE_EXTENSION_ICONV	=> 'iconv',
+	);
+
+	foreach ($extensions as $extension => $extension_name){
+
+		$GLOBALS['sanitize_extension'] = $extension;
+		$GLOBALS['test_name_prefix'] = "[$extension_name] ";
+
+
 	###########################################################################################
 
 if (RUN_TESTS_BAD_BYTES){
 
-	$GLOBALS['sanatize_mode'] = SANATIZE_INVALID_STRIP;
+	$GLOBALS['sanitize_mode'] = SANITIZE_INVALID_STRIP;
 
 	#
 	# make sure we filter out bytes that are never valid UTF-8
@@ -199,8 +226,8 @@ if (RUN_TESTS_CONVERT_FROM){
 	# test invalid conversion
 	#
 
-	$GLOBALS['sanatize_mode'] = SANATIZE_INVALID_CONVERT;
-	$GLOBALS['sanatize_convert_from'] = 'ISO-8859-1';
+	$GLOBALS['sanitize_mode'] = SANITIZE_INVALID_CONVERT;
+	$GLOBALS['sanitize_convert_from'] = 'ISO-8859-1';
 
 	test_string("\x76", "\x76", "Latin-1 fallback 0x76");
 	test_string("\xEB", "\xc3\xab", "Latin-1 fallback 0xEB");
@@ -216,7 +243,7 @@ if (RUN_TESTS_THROW){
 	# test invalid exceptions
 	#
 
-	$GLOBALS['sanatize_mode'] = SANATIZE_INVALID_THROW;
+	$GLOBALS['sanitize_mode'] = SANITIZE_INVALID_THROW;
 	
 }
 	###########################################################################################
@@ -227,9 +254,9 @@ if (RUN_TESTS_BAD_MODE){
 	# test a non-existent mode
 	#
 
-	$GLOBALS['sanatize_mode']		= 1000;
+	$GLOBALS['sanitize_mode']		= 1000;
 
-	test_string("hello\xC0world", "ERROR: Unknown sanatize mode");
+	test_exception('sanitize("hello\xC0world", "str");', 'Unknown sanitize mode exception');
 }
 
 	###########################################################################################
@@ -241,7 +268,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# test input conversion
 	#
 
-	$GLOBALS['sanatize_mode']	= SANATIZE_INVALID_STRIP;
+	$GLOBALS['sanitize_mode']	= SANITIZE_INVALID_STRIP;
 
 
 	#
@@ -249,13 +276,16 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/SHIFTJIS.TXT
 	#
 
-	$GLOBALS['sanatize_input_encoding']	= 'SJIS';
+	if ($extension != SANITIZE_EXTENSION_PHP){
 
-	test_string("\x76"    , "\x76"        , "SJIS 0x76   -> U+0076");
-	test_string("\xa6"    , "\xef\xbd\xa6", "SJIS 0xA6   -> U+FF66");
-	test_string("\x81\x40", "\xe3\x80\x80", "SJIS 0x8140 -> U+3000");
-	test_string("\x82\xdc", "\xe3\x81\xbe", "SJIS 0x82DC -> U+307E");
-	test_string("\x8c\xcc", "\xe6\x95\x85", "SJIS 0x8CCC -> U+6545");
+		$GLOBALS['sanitize_input_encoding']	= 'SJIS';
+
+		test_string("\x76"    , "\x76"        , "SJIS 0x76   -> U+0076");
+		test_string("\xa6"    , "\xef\xbd\xa6", "SJIS 0xA6   -> U+FF66");
+		test_string("\x81\x40", "\xe3\x80\x80", "SJIS 0x8140 -> U+3000");
+		test_string("\x82\xdc", "\xe3\x81\xbe", "SJIS 0x82DC -> U+307E");
+		test_string("\x8c\xcc", "\xe6\x95\x85", "SJIS 0x8CCC -> U+6545");
+	}
 
 
 	#
@@ -267,17 +297,20 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# 208-1983 is escaped with 0x1B 0x24($) 0x42(B)
 	#
 
-	$GLOBALS['sanatize_input_encoding'] = 'ISO-2022-JP';
+	if ($extension != SANITIZE_EXTENSION_PHP){
 
-	test_string("\x76", "\x76"        , "ISO-2022-JP US-ASCII 0x76   -> U+0076");
-	test_string("\xa6", "\xef\xbd\xa6", "ISO-2022-JP JIS-X-201 0xA6   -> U+FF66");
-	test_string("\xbe", "\xef\xbd\xbe", "ISO-2022-JP JIS-X-201 0xBE   -> U+FF7E");
+		$GLOBALS['sanitize_input_encoding'] = 'ISO-2022-JP';
 
-	test_string("\x1B\$@\x21\x4a", "\xef\xbc\x88", "ISO-2022-JP JIS-X-208-1978 0x214A -> U+FF08");
-	test_string("\x1B\$@\x3c\x2d", "\xe8\xbe\x9e", "ISO-2022-JP JIS-X-208-1978 0x3C2D -> U+8F9E");
+		test_string("\x76", "\x76"        , "ISO-2022-JP US-ASCII 0x76   -> U+0076");
+		test_string("\xa6", "\xef\xbd\xa6", "ISO-2022-JP JIS-X-201 0xA6   -> U+FF66");
+		test_string("\xbe", "\xef\xbd\xbe", "ISO-2022-JP JIS-X-201 0xBE   -> U+FF7E");
 
-	test_string("\x1B\$B\x21\x4a", "\xef\xbc\x88", "ISO-2022-JP JIS-X-208-1983 0x214A -> U+FF08");
-	test_string("\x1B\$B\x3c\x2d", "\xe8\xbe\x9e", "ISO-2022-JP JIS-X-208-1983 0x3C2D -> U+8F9E");
+		test_string("\x1B\$@\x21\x4a", "\xef\xbc\x88", "ISO-2022-JP JIS-X-208-1978 0x214A -> U+FF08");
+		test_string("\x1B\$@\x3c\x2d", "\xe8\xbe\x9e", "ISO-2022-JP JIS-X-208-1978 0x3C2D -> U+8F9E");
+
+		test_string("\x1B\$B\x21\x4a", "\xef\xbc\x88", "ISO-2022-JP JIS-X-208-1983 0x214A -> U+FF08");
+		test_string("\x1B\$B\x3c\x2d", "\xe8\xbe\x9e", "ISO-2022-JP JIS-X-208-1983 0x3C2D -> U+8F9E");
+	}
 
 
 	#
@@ -290,18 +323,21 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# to encode 212 in EUC-JP put 0x8f followed by the code+0x8080
 	#
 
-	$GLOBALS['sanatize_input_encoding'] = 'EUC-JP';
+	if ($extension != SANITIZE_EXTENSION_PHP){
 
-	test_string("\x76", "\x76", "EUC-JP US-ASCII 0x76 -> U+0076");
+		$GLOBALS['sanitize_input_encoding'] = 'EUC-JP';
 
-	test_string("\x8E\xB6", "\xef\xbd\xb6", "EUC-JP JIS-X-201 0xB6 -> U+FF76");
-	test_string("\x8E\xDE", "\xef\xbe\x9e", "EUC-JP JIS-X-201 0xDE -> U+FF9E");
+		test_string("\x76", "\x76", "EUC-JP US-ASCII 0x76 -> U+0076");
 
-	test_string("\xA1\xB3", "\xe3\x83\xbd", "EUC-JP JIS-X-0208 0x2133 -> U+30FD");
-	test_string("\xB0\xD3", "\xe5\xb0\x89", "EUC-JP JIS-X-0208 0x3053 -> U+5C09");
+		test_string("\x8E\xB6", "\xef\xbd\xb6", "EUC-JP JIS-X-201 0xB6 -> U+FF76");
+		test_string("\x8E\xDE", "\xef\xbe\x9e", "EUC-JP JIS-X-201 0xDE -> U+FF9E");
 
-	test_string("\x8f\xB0\xB1", "\xe4\xb9\x84", "EUC-JP JIS-X-0212 0x3031 - U+4E44");
-	test_string("\x8f\xC2\xD8", "\xe6\x9a\xa4", "EUC-JP JIS-X-0212 0x4258 - U+66A4");
+		test_string("\xA1\xB3", "\xe3\x83\xbd", "EUC-JP JIS-X-0208 0x2133 -> U+30FD");
+		test_string("\xB0\xD3", "\xe5\xb0\x89", "EUC-JP JIS-X-0208 0x3053 -> U+5C09");
+
+		test_string("\x8f\xB0\xB1", "\xe4\xb9\x84", "EUC-JP JIS-X-0212 0x3031 - U+4E44");
+		test_string("\x8f\xC2\xD8", "\xe6\x9a\xa4", "EUC-JP JIS-X-0212 0x4258 - U+66A4");
+	}
 
 
 	#
@@ -309,7 +345,7 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-1.TXT
 	#
 
-	$GLOBALS['sanatize_input_encoding'] = 'ISO-8859-1';
+	$GLOBALS['sanitize_input_encoding'] = 'ISO-8859-1';
 
 	test_string("\x76", "\x76",     "ISO-8859-1 0x76 -> U+0076");
 	test_string("\xE6", "\xc3\xa6", "ISO-8859-1 0xE6 -> U+00E6");
@@ -320,10 +356,13 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-2.TXT
 	#	
 
-	$GLOBALS['sanatize_input_encoding'] = 'ISO-8859-2';
+	if ($extension != SANITIZE_EXTENSION_PHP){
 
-	test_string("\x76", "\x76",     "ISO-8859-2 0x76 -> U+0076");
-	test_string("\xE6", "\xc4\x87", "ISO-8859-2 0xE6 -> U+0107");
+		$GLOBALS['sanitize_input_encoding'] = 'ISO-8859-2';
+
+		test_string("\x76", "\x76",     "ISO-8859-2 0x76 -> U+0076");
+		test_string("\xE6", "\xc4\x87", "ISO-8859-2 0xE6 -> U+0107");
+	}
 
 
 	#
@@ -331,19 +370,33 @@ if (RUN_TESTS_INPUT_CONVERSION){
 	# http://unicode.org/Public/MAPPINGS/ISO8859/8859-15.TXT
 	#	
 
-	$GLOBALS['sanatize_input_encoding'] = 'ISO-8859-15';
+	if ($extension != SANITIZE_EXTENSION_PHP){
 
-	test_string("\x76", "\x76",     "ISO-8859-15 0x76 -> U+0076");
-	test_string("\xBE", "\xc5\xb8", "ISO-8859-15 0xBE -> U+0178");
+		$GLOBALS['sanitize_input_encoding'] = 'ISO-8859-15';
+
+		test_string("\x76", "\x76",     "ISO-8859-15 0x76 -> U+0076");
+		test_string("\xBE", "\xc5\xb8", "ISO-8859-15 0xBE -> U+0178");
+	}
 
 
 	#
 	# remember to reset this, or further tests will get fucked up
 	#
 
-	$GLOBALS['sanatize_input_encoding']	= 'UTF-8';
+	$GLOBALS['sanitize_input_encoding']	= 'UTF-8';
 
 }
+
+	###########################################################################################
+
+	#
+	# end of the extension mode loop
+	#
+
+	}
+
+	$GLOBALS['sanitize_extension'] = SANITIZE_EXTENSION_MBSTRING;
+	$GLOBALS['test_name_prefix'] = '';
 
 	###########################################################################################
 
@@ -371,6 +424,8 @@ if (RUN_TESTS_BASICS){
 
 	###########################################################################################
 
+	
+
 	test_summary();
 
 	###########################################################################################
@@ -380,11 +435,13 @@ if (RUN_TESTS_BASICS){
 		$GLOBALS['tests'] = array(
 			'string' => 0,
 			'sanitize' => 0,
+			'exception' => 0,
 		);
 		$GLOBALS['verbose'] = isset($_GET['verbose']) ? 1 : 0;
 		$GLOBALS['test_passed'] = 0;
 		$GLOBALS['test_failed'] = 0;
 		$GLOBALS['test_header_done'] = 0;
+		$GLOBALS['test_name_prefix'] = '';
 	}
 
 	function test_header(){
@@ -423,7 +480,7 @@ if (RUN_TESTS_BASICS){
 				test_header();
 
 				echo "<tr>\n";
-				echo "\t<td>".HtmlSpecialChars($name)."</td>\n";
+				echo "\t<td>".HtmlSpecialChars($GLOBALS['test_name_prefix'].$name)."</td>\n";
 				if ($pass){
 					echo "\t<td style=\"color: green\">pass</td>\n";
 				}else{
@@ -510,7 +567,7 @@ if (RUN_TESTS_BASICS){
 
 	function test_sanitize($in, $type, $out, $name=null){
 		$GLOBALS['tests']['sanitize']++;
-		if (!isset($name)) $name = "Unknown sanatize test {$GLOBALS['tests']['sanitize']} ($type)";
+		if (!isset($name)) $name = "Unknown sanitize test {$GLOBALS['tests']['sanitize']} ($type)";
 
 		$got = sanitize($in, $type);
 		test_harness($in, $out, $got, $name);
@@ -522,5 +579,21 @@ if (RUN_TESTS_BASICS){
 
 		$got = sanitize($in, 'str');
 		test_harness($in, $out, $got, $name);
+	}
+
+	function test_exception($code, $name=null){
+		$GLOBALS['tests']['exception']++;
+		if (!isset($name)) $name = "Unknown exception test ".$GLOBALS['tests']['exception'];
+
+		$thrown = null;
+
+		try {
+			eval($code);
+		}
+		catch (Exception $e){
+			$thrown = $e;
+		}
+
+		test_harness($code, 'thrown', $thrown ? 'thrown' : 'not thrown', $name);
 	}
 ?>
