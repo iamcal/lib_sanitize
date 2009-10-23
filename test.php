@@ -527,9 +527,9 @@
 			$percent = 0;
 		}
 
-		echo "<br />\n";
-		echo "Passed $GLOBALS[test_passed] of $total tests ($percent%)<br />\n";
-		echo "<br />";
+		$color = $GLOBALS['test_failed'] ? 'red' : 'green';
+
+		echo "<h2 style=\"color: $color\">Passed $GLOBALS[test_passed] of $total tests ($percent%)</h2>\n";
 
 		if ($GLOBALS['verbose']){
 			echo '<a href="test.php">Hide test details</a>';
