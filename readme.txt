@@ -29,6 +29,9 @@ USAGE
 	$b = post_int32('key_name');		# $_POST
 	$c = request_str_multi('key_name');	# $_REQUEST
 
+	# just care about strings?
+	$a = sanitize_string($input, $allow_newlines);
+
 
 
 	# the default mode - strip out bad UTF-8
