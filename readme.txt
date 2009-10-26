@@ -32,19 +32,19 @@ USAGE
 
 
 	# the default mode - strip out bad UTF-8
-	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_STRIP;
+	$GLOBALS['sanitize_mode'] = SANITIZE_INVALID_STRIP;
 
 	# alternative mode - if the input isn't valid UTF-8, convert from anothr character set
-	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_CONVERT;
-	$GLOBALS[sanatize_convert_from] = 'ISO-8859-1'; # Latin-1
+	$GLOBALS['sanitize_mode'] = SANITIZE_INVALID_CONVERT;
+	$GLOBALS['sanitize_convert_from'] = 'ISO-8859-1'; # Latin-1
 
 	# alternative mode - if the input isn't valid UTF-8, throw an exception
-	$GLOBALS[sanatize_mode] = SANATIZE_INVALID_THROW;
+	$GLOBALS['sanitize_mode'] = SANITIZE_INVALID_THROW;
 
 
 
 	# if you know your input encoding, set it first (all input is converted to UTF-8)
-	$GLOBALS[sanatize_input_encoding] = 'SJIS'; # Shift-JIS
+	$GLOBALS['sanitize_input_encoding'] = 'SJIS'; # Shift-JIS
 
 
 
@@ -54,8 +54,8 @@ USAGE
 	# if you don't have iconv either, you can use pure php
 	$GLOBALS['sanitize_extension'] = SANITIZE_EXTENSION_PHP;
 
-	# mbstring (the default) is the fastest.
-	# iconv is still fast, but slower than mbstring and supports less encodings.
+	# iconv is the fastest, but supports less encodings and is broken on some platforms.
+	# mbstring (the default) is still very fast and supports many encodings.
 	# pure php mode only supports UTF-8 and ISO-8859-1 (Latin-1) and is very slow.
 ?>
 
