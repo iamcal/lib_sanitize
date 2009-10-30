@@ -114,15 +114,6 @@
 
 
 <?
-	echo "<table border=\"1\" cellpadding=\"4\">\n";
-	echo "<tr>\n";
-	echo "<th>Test</th>\n";
-	echo "<th>MBSTRING</th>\n";
-	echo "<th>ICONV</th>\n";
-	echo "<th>PHP</th>\n";
-	echo "</tr>\n";
-
-
 	do_test("", "Empty String");
 	do_test($clean_ascii, "1K of clean ASCII");
 	do_test($clean_utf8, "1K of clean UTF8");
@@ -137,19 +128,21 @@
 	do_test($clean_latin1, "1K of fallback Latin-1");
 
 
-	echo "</table>";
-
-
 	function do_test($input, $name){
 
-		echo "<tr>\n";
-		echo "<td>".HtmlSpecialChars($name)."</td>\n";
+		echo "<h2>".HtmlSpecialChars($name)."</h2>\n";
 
 
-		$exts = array(SANITIZE_EXTENSION_MBSTRING, SANITIZE_EXTENSION_ICONV, SANITIZE_EXTENSION_PHP);
+		$exts = array(
+			SANITIZE_EXTENSION_MBSTRING	=> 'MBSTRING', 
+			SANITIZE_EXTENSION_ICONV	=> 'ICONV',
+			SANITIZE_EXTENSION_PHP		=> 'PHP',
+		);
+
 		$results = array();
+		$max = 0;
 
-		foreach ($exts as $ext){
+		foreach ($exts as $ext => $lbl){
 
 			$GLOBALS['sanitize_extension'] = $ext;
 			$start = microtime_micro();
@@ -170,22 +163,49 @@
 				'e' => $error,
 				'last' => $temp,
 			);
+
+			if (!$error){
+				$max = max($max, $ps);
+			}
 		}
 
-		foreach ($exts as $ext){
+		echo "<table border=\"1\" cellpadding=\"4\">\n";
+		echo "<tr>\n";
+		echo "<th>Extension</th>\n";
+		echo "<th>Time</th>\n";
+		echo "<th>Rate</th>\n";
+		echo "<th>&nbsp;</th>\n";
+		echo "</tr>\n";
 
-			echo "<td align=\"center\">";
+
+		foreach ($exts as $ext => $lbl){
+
+			echo "<tr>\n";
+			echo "<td>$lbl</td>\n";
+
 			if ($results[$ext][e]){
-				echo "-";
+				echo "<td align=\"center\">n/a</td>";
+				echo "<td align=\"center\">n/a</td>";
+				echo "<td>&nbsp;</td>";
 			}else{
-				echo number_format($results[$ext][t])."ms<br />\n";
-				echo number_format($results[$ext][ps])."/s<br />\n";
+				echo "<td align=\"right\">".number_format($results[$ext][t])."ms</td>";
+				echo "<td align=\"right\">".number_format($results[$ext][ps])."/s</td>";
+
+				$w = round(300 * ($results[$ext][ps] / $max));
+
+				$col = ($results[$ext][ps] == $max) ? '#0c0' : '#9f9';
+
+				echo "<td align=\"left\"><div style=\"height: 30px; width: {$w}px; background-color: $col\"></div></td>";
+
 				#echo substr($results[$ext][last], 0, 20);
 			}
 			echo "</td>\n";
+
+			echo "</tr>\n";
+
 		}
 
-		echo "</tr>\n";
+		echo "</table>\n";
 	}
 
 	function microtime_micro(){ 
