@@ -234,16 +234,16 @@
 	test_string("a\xE0\x9F\xBFb", "ab", "highest overlong 3-byte - U+07FF");
 
 	test_string("a\xe0\xa0\x80b", "a\xe0\xa0\x80b", "lowest valid 3-byte - U+0800");
-	test_string("a\xEF\xBF\xBFb", "a\xEF\xBF\xBFb", "highest valid 3-byte - U+FFFF");
+	test_string("a\xEF\xBF\xBBb", "a\xEF\xBF\xBBb", "highest valid 3-byte - U+FFFB"); # FFFC/D are replaced, FFFE/F are invalid
 
 	test_string("a\xF0\x80\x80\x80b", "ab", "lowest overlong 4-byte - U+0000");
-	test_string("a\xF0\x8F\xBF\xBFb", "ab", "highest overlong 4-byte - U+FFFF");
+	test_string("a\xF0\x8F\xBF\xBBb", "ab", "highest overlong 4-byte - U+FFFB"); # FFFC/D are replaced, FFFE/F are invalid
 
 	test_string("a\xf0\x90\x80\x80b", "a\xf0\x90\x80\x80b", "lowest valid 4-byte - U+10000");
-	test_string("a\xf4\x8f\xbf\xbfb", "a\xf4\x8f\xbf\xbfb", "highest valid 4-byte - U+10FFFF");
+	test_string("a\xf4\x8f\xbf\xbdb", "a\xf4\x8f\xbf\xbdb", "highest valid 4-byte - U+10FFFD"); # 10FFFE/F are invalid
 
 	test_string("a\xF8\x80\x80\x80\x80b", "ab", "lowest overlong 5-byte - U+0000");
-	test_string("a\xF8\x87\xBF\xBF\xBFb", "ab", "highest overlong 5-byte - U+1FFFFF");
+	test_string("a\xF8\x87\xBF\xBF\xBDb", "ab", "highest overlong 5-byte - U+1FFFFD"); # 1FFFFE/F are invalid
 
 	test_string("a\xFC\x80\x80\x80\x80\x80b", "ab", "lowest overlong 6-byte - U+0000");
 	test_string("a\xFC\x83\xBF\xBF\xBF\xBFb", "ab", "highest overlong 6-byte - U+3FFFFFF");

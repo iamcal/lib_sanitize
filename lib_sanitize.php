@@ -40,6 +40,7 @@
 	$GLOBALS['sanitize_extension']		= SANITIZE_EXTENSION_MBSTRING;
 	$GLOBALS['sanitize_convert_from']	= 'ISO-8859-1'; # Latin-1
 	$GLOBALS['sanitize_input_encoding']	= 'UTF-8';
+	$GLOBALS['sanitize_strip_reserved']	= 1;
 
 	##############################################################################
 
@@ -199,7 +200,13 @@
 		# maybe we can roll it all into one UTF-8 rx?
 		#
 
-		$input = preg_replace('!\p{Cn}!u', '', $input);
+		if ($GLOBALS['sanitize_strip_reserved']){
+
+			$input = preg_replace('!\p{Cn}!u', '', $input);
+		}else{
+			$rx = '((\xF4\x8F|\xEF|\xF0\x9F|\xF0\xAF|\xF0\xBF|((\xF1|\xF2|\xF3)(\x8F|\x9F|\xAF|\xBF)))\xBF(\xBE|\xBF))|\xEF\xB7[\x90-\xAF]';
+			$input = preg_replace('!'.$rx.'!', '', $input);
+		}
 
 
 		#
