@@ -28,6 +28,7 @@
 	define('RUN_TESTS_BAD_MODE'		, 1);
 	define('RUN_TESTS_INPUT_CONVERSION'	, 1);
 	define('RUN_TESTS_BASICS'		, 1);
+	define('RUN_TESTS_STRIPPING'		, 1);
 
 
 
@@ -444,6 +445,16 @@
 
 
 	#
+	# TODO: more!
+	#
+
+	}
+
+	###########################################################################################
+
+	if (RUN_TESTS_STRIPPING){
+
+	#
 	# carriage return normalization
 	#
 
@@ -453,9 +464,122 @@
 	test_sanitize(c8(0x2029), 'str', " ");
 	test_sanitize(c8(0x2029), 'str_multi', "\n\n");
 
+	test_sanitize(c8(0x0B), 'str', " ");
+	test_sanitize(c8(0x0B), 'str_multi', "\n\n");
+
+	test_sanitize(c8(0x0C), 'str', " ");
+	test_sanitize(c8(0x0C), 'str_multi', "\n\n");
+
+	test_sanitize("\r\n", 'str', " ");
+	test_sanitize("\r\n", 'str_multi', "\n");
+
+	test_sanitize("\n", 'str', " ", "LF [single line mode]");
+	test_sanitize("\n", 'str_multi', "\n", "LF [multi line mode]");
+
+	test_sanitize("\r", 'str', " ");
+	test_sanitize("\r", 'str_multi', "\n");
+
+	test_sanitize("\r\r\n", 'str', "  ", "mix of CRLF and CR [single line mode]");
+	test_sanitize("\r\r\n", 'str_multi', "\n\n", "mix of CRLF and CR [multi line mode]");
+
+	test_sanitize("\t", 'str', " ", "TAB [single line mode]");
+	test_sanitize("\t", 'str_multi', " ", "TAB [multi line mode]");
+
+	test_sanitize(c8(0x85), 'str', " ", "NEL [single line mode]");
+	test_sanitize(c8(0x85), 'str_multi', "\n", "NEL [multi line mode]");
+
+
 	#
-	# TODO: lots more tests here
+	# Cc removals
 	#
+
+	$strip_points = array_merge(
+		range(0x00, 0x08),
+		range(0x0E, 0x1F),
+		range(0x7F, 0x84),
+		range(0x86, 0x9F)
+	);
+
+	foreach ($strip_points as $point){
+
+		test_sanitize("foo".c8($point)."bar", 'str', "foobar", "Strip Cc U+00".sprintf('%02X', $point));
+	}
+
+
+	#
+	# Cf removals
+	#
+
+	$strip_points = array_merge(
+		array(0xFEFF),
+		range(0x206A, 0x206F),
+		range(0xFFF9, 0xFFFA),
+		array(
+			0xE0000,	# U+E0000..U+E007F is a big
+			0xE003F,	# range, so we'll test the
+			0xE007F,	# edges and the middle.
+		)
+	);
+
+	foreach ($strip_points as $point){
+
+		test_sanitize("foo".c8($point)."bar", 'str', "foobar", "Strip Cf U+".sprintf('%04X', $point));
+	}
+
+
+	#
+	# Cs removals
+	#
+
+	$strip_points = array(
+		0xD800,	# lowest leading surrogate
+		0xDA00, # mid-point
+		0xDBFF, # highest leading surrogate
+		0xDC00, # lowest trailing surrogate
+		0xDE00, # mid-point
+		0xDFFF, # highest trailing surrogate
+	);
+
+	foreach ($strip_points as $point){
+
+		test_sanitize("foo".c8($point)."bar", 'str', "foobar", "Strip Cs U+".sprintf('%04X', $point));
+	}
+
+
+	#
+	# Cn removals
+	#
+
+	#
+	# non-characters
+	#
+
+		$strip_points = array(
+			0xFFFE, 0xFFFF,
+			0x1FFFE, 0x1FFFF,
+			0x2FFFE, 0x2FFFF,
+			# etc etc
+			0x10FFFE, 0x10FFFF,
+
+			0xFDD0, # lowest of the extras
+			0xFDE0, # mid-point
+			0xFDEF, # highest of the extras
+		);
+
+		foreach ($strip_points as $point){
+
+			test_sanitize("foo".c8($point)."bar", 'str', "foobar", "Strip Cn non-character U+".sprintf('%04X', $point));
+		}
+
+		
+
+
+	#
+	# So replacements
+	#
+
+	test_sanitize("foo".c8(0xFFFC)."bar", 'str', "foo?bar", "Replace So U+FFFC with ?");
+	test_sanitize("foo".c8(0xFFFD)."bar", 'str', "foo?bar", "Replace So U+FFFD with ?");
 
 	}
 
@@ -608,7 +732,7 @@
 
 	function test_sanitize($in, $type, $out, $name=null){
 		$GLOBALS['tests']['sanitize']++;
-		if (!isset($name)) $name = "Unknown sanitize test {$GLOBALS['tests']['sanitize']} ($type)";
+		if (!isset($name)) $name = "Untitled sanitize test {$GLOBALS['tests']['sanitize']} ($type)";
 
 		$got = sanitize($in, $type);
 		test_harness($in, $out, $got, $name);
@@ -616,7 +740,7 @@
 
 	function test_string($in, $out, $name=null){
 		$GLOBALS['tests']['string']++;
-		if (!isset($name)) $name = "Unknown string test ".$GLOBALS['tests']['string'];
+		if (!isset($name)) $name = "Untitled string test ".$GLOBALS['tests']['string'];
 
 		$got = sanitize($in, 'str');
 		test_harness($in, $out, $got, $name);
@@ -624,7 +748,7 @@
 
 	function test_exception($code, $name=null){
 		$GLOBALS['tests']['exception']++;
-		if (!isset($name)) $name = "Unknown exception test ".$GLOBALS['tests']['exception'];
+		if (!isset($name)) $name = "Untitled exception test ".$GLOBALS['tests']['exception'];
 
 		$thrown = null;
 
