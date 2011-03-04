@@ -86,7 +86,7 @@
 		# if we get a null in, always return a null
 		#
 
-		if ($type == 'isset') return sset($input);
+		if ($type == 'isset') return isset($input);
 
 		if (!isset($input)) return $default;
 
@@ -343,7 +343,7 @@
 
 	##############################################################################
 
-	function sanitize_intval32($input, $complain=false){
+	function sanitize_int32($input, $complain=false){
 
 		$r = intval($input);
 
