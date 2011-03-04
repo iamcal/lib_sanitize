@@ -24,7 +24,7 @@
 	##############################################################################
 
 	#
-	# what to do when invalid 
+	# what to do when invalid
 	#
 
 	define('SANITIZE_INVALID_STRIP',	1); # strip out the offending bytes
@@ -41,6 +41,7 @@
 	$GLOBALS['sanitize_convert_from']	= 'ISO-8859-1'; # Latin-1
 	$GLOBALS['sanitize_input_encoding']	= 'UTF-8';
 	$GLOBALS['sanitize_strip_reserved']	= 1;
+	$GLOBALS['sanitize_pcre_has_props']	= sanitize_check_pcre_unicode_props();
 
 	##############################################################################
 
@@ -202,7 +203,13 @@
 
 		if ($GLOBALS['sanitize_strip_reserved']){
 
-			$input = preg_replace('!\p{Cn}!u', '', $input);
+			if ($GLOBALS['sanitize_pcre_has_props']){
+
+				$input = preg_replace('!\p{Cn}!u', '', $input);
+			}else{
+				throw new Exception('PCRE has not been compiled with unicode property support. Try disabling sanitize_strip_reserved');
+			}
+
 		}else{
 			$rx = '((\xF4\x8F|\xEF|\xF0\x9F|\xF0\xAF|\xF0\xBF|((\xF1|\xF2|\xF3)(\x8F|\x9F|\xAF|\xBF)))\xBF(\xBE|\xBF))|\xEF\xB7[\x90-\xAF]';
 			$input = preg_replace('!'.$rx.'!', '', $input);
@@ -363,6 +370,22 @@
 		}
 
 		return 0;
+	}
+
+	##############################################################################
+
+	#
+	# sometimes PCRE is compiled without --enable-unicode-properties and properties
+	# wont work. we detect that once per execution and store the result.
+	#
+
+	function sanitize_check_pcre_unicode_props(){
+
+		if (@preg_match('!\p{Ll}!', 'hello')){
+			return true;
+		}
+
+		return false;
 	}
 
 	##############################################################################
