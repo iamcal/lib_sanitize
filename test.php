@@ -30,7 +30,13 @@
 	define('RUN_TESTS_BASICS'		, 1);
 	define('RUN_TESTS_STRIPPING'		, 1);
 
+	###########################################################################################
 
+	if (!$GLOBALS['sanitize_pcre_has_props']){
+
+		$GLOBALS['sanitize_strip_reserved'] = false;
+		echo '<p style="color: red">Reserved character stripping will not be tested, because your PHP install does not support it.</p>';
+	}
 
 	###########################################################################################
 
