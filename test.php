@@ -228,7 +228,26 @@
 	#
 
 	test_string("a\xC2\xA0b", "a\xC2\xA0b", "lowest valid 2-byte - U+00A0");
-	test_string("a\xDF\xBFb", "a\xDF\xBfb", "highest valid 2-byte - U+07FF");
+
+	#
+	# the highest 2-byte is U+07FF, but it's reserved. we will strip it if
+	# '' is enabled. U+07FA is the highest valid 2-byte.
+	#
+
+	if ($GLOBALS['sanitize_pcre_has_props']){
+
+		test_string("a\xDF\xBAb", "a\xDF\xBAb", "highest valid 2-byte - U+07FA");
+
+		$GLOBALS['sanitize_strip_reserved'] = false;
+		test_string("a\xDF\xBFb", "a\xDF\xBFb", "highest possible 2-byte (no strip) - U+07FF");
+
+		$GLOBALS['sanitize_strip_reserved'] = true;
+		test_string("a\xDF\xBFb", "ab", "highest possible 2-byte (strip) - U+07FF");
+
+	}else{
+		test_string("a\xDF\xBAb", "a\xDF\xBAb", "highest valid 2-byte - U+07FA");
+		test_string("a\xDF\xBFb", "a\xDF\xBFb", "highest possible 2-byte - U+07FF");
+	}
 
 	test_string("a\xE0\x80\x80b", "ab", "lowest overlong 3-byte - U+0000");
 	test_string("a\xE0\x9F\xBFb", "ab", "highest overlong 3-byte - U+07FF");
