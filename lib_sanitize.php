@@ -40,7 +40,7 @@
 	$GLOBALS['sanitize_extension']		= SANITIZE_EXTENSION_MBSTRING;
 	$GLOBALS['sanitize_convert_from']	= 'ISO-8859-1'; # Latin-1
 	$GLOBALS['sanitize_input_encoding']	= 'UTF-8';
-	$GLOBALS['sanitize_strip_reserved']	= 1;
+	$GLOBALS['sanitize_strip_reserved']	= true;
 	$GLOBALS['sanitize_pcre_has_props']	= sanitize_check_pcre_unicode_props();
 
 	##############################################################################
