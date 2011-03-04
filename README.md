@@ -1,5 +1,6 @@
 
-== lib_sanitize ==
+lib_sanitize
+============
 
 A PHP input sanitizing library.
 
@@ -7,7 +8,7 @@ A PHP input sanitizing library.
 USAGE
 ------------------------------------------------------------
 
-<?php
+  <?php
 	include('lib_sanitize.php');
 
 	# in essence
@@ -60,7 +61,7 @@ USAGE
 	# iconv is the fastest, but supports less encodings and is broken on some platforms.
 	# mbstring (the default) is still very fast and supports many encodings.
 	# pure php mode only supports UTF-8 and ISO-8859-1 (Latin-1) and is very slow.
-?>
+  ?>
 
 
 CREDITS
