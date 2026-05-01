@@ -4,13 +4,7 @@
 	#
 	# A PHP input filtering library
 	#
-	# $Id$
-	#
-	# *article urls here*
-	#
-	# By Cal Henderson <cal@iamcal.com>
-	# This code is licensed under a Creative Commons Attribution-ShareAlike 2.5 License
-	# http://creativecommons.org/licenses/by-sa/2.5/
+	# https://github.com/iamcal/lib_sanitize
 	#
 
 	#
@@ -108,7 +102,7 @@
 			case 'html':
 				# this needs to do class_exists('lib_filter')
 				die("not implemented");
-			
+
 			case 'bool':
 				return $input ? true : false;
 
@@ -257,7 +251,12 @@
 			case SANITIZE_EXTENSION_PHP:
 				if ($from == 'ISO-8859-1'){
 
-					return utf8_encode($input);
+					if (version_compare(PHP_VERSION, '8.2.0') >= 0) {
+						# if urf8_encode() is deprecated, use our own version
+						return sanitize_iso88591_to_utf8($input);
+					}else{
+						return utf8_encode($input);
+					}
 				}
 
 				if ($from == 'UTF-8'){
@@ -283,7 +282,7 @@
 					mb_substitute_character('long');
 					return mb_convert_encoding(sanitize_strip_overlong($input), 'UTF-8', 'UTF-8');
 				}
-			
+
 				mb_substitute_character(0xFFFD);
 				return mb_convert_encoding($input, 'UTF-8', $from);
 
@@ -381,7 +380,9 @@
 
 	function sanitize_check_pcre_unicode_props(){
 
-		if (@preg_match('!\p{Ll}!', 'hello')){
+		$str = @preg_match('!\p{Ll}!', 'hello');
+
+		if (is_string($str)){
 			return true;
 		}
 
@@ -389,4 +390,20 @@
 	}
 
 	##############################################################################
-?>
+
+	function sanitize_iso88591_to_utf8($str){
+
+		$out = '';
+		$len = strlen($str);
+		for ($i=0; $i<$len; $i++){
+			$a = ord(substr($str, $i, 1));
+			if ($a & 0b10000000){
+				$out .= chr((($a & 0b11000000) >> 6) | 0b11000000) . chr(($a & 0b00111111) | 0b10000000);
+			}else{
+				$out .= chr($a);
+			}
+		}
+
+		return $out;
+	}
+
