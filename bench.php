@@ -1,4 +1,4 @@
-<?
+<?php
 	header("Content-type: text/html; charset=utf-8");
 
 	include('lib_sanitize.php');
@@ -113,7 +113,7 @@
 </ul>
 
 
-<?
+<?php
 	do_test("", "Empty String");
 	do_test($clean_ascii, "1K of clean ASCII");
 	do_test($clean_utf8, "1K of clean UTF8");

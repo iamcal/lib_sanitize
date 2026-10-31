@@ -7,7 +7,7 @@
 	<li> Pure-PHP mode skips all the encoding conversion tests apart from Latin-1. </li>
 </ul>
 
-<?
+<?php
 	#
 	# $Id$
 	#
