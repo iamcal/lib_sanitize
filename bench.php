@@ -3,7 +3,7 @@
 
 	include('lib_sanitize.php');
 
-	$GLOBALS[test_loops] = 300;
+	$GLOBALS['test_loops'] = 300;
 
 
 	#
@@ -102,7 +102,7 @@
 <h1>lib_sanitize Benchmarks</h1>
 
 <ul>
-	<li> Each test is run <b><?=$GLOBALS[test_loops]?> times</b> (you can modify a line at the top of this file to change that). </li>
+	<li> Each test is run <b><?=$GLOBALS['test_loops']?> times</b> (you can modify a line at the top of this file to change that). </li>
 	<li> iconv is generally fastest when not converting from another encoding. </li>
 	<li> mbstring is generally fastest when converting from another encoding. </li>
 	<li> PHP is significantly slower than both. </li>
@@ -147,7 +147,7 @@
 			$GLOBALS['sanitize_extension'] = $ext;
 			$start = microtime_micro();
 			$error = 0;
-			for ($i=0; $i<$GLOBALS[test_loops]; $i++){
+			for ($i=0; $i<$GLOBALS['test_loops']; $i++){
 				try {
 					$temp = sanitize_string($input, 1);
 				} catch (Exception $e){
@@ -156,7 +156,7 @@
 				}
 			}
 			$t = microtime_micro() - $start;
-			$ps = round(1000000 * $GLOBALS[test_loops] / $t);
+			$ps = round(1000000 * $GLOBALS['test_loops'] / $t);
 			$results[$ext] = array(
 				't' => round($t / 1000),
 				'ps' => $ps,
@@ -183,17 +183,17 @@
 			echo "<tr>\n";
 			echo "<td>$lbl</td>\n";
 
-			if ($results[$ext][e]){
+			if ($results[$ext]['e']){
 				echo "<td align=\"center\">n/a</td>";
 				echo "<td align=\"center\">n/a</td>";
 				echo "<td>&nbsp;</td>";
 			}else{
-				echo "<td align=\"right\">".number_format($results[$ext][t])."ms</td>";
-				echo "<td align=\"right\">".number_format($results[$ext][ps])."/s</td>";
+				echo "<td align=\"right\">".number_format($results[$ext]['t'])."ms</td>";
+				echo "<td align=\"right\">".number_format($results[$ext]['ps'])."/s</td>";
 
-				$w = round(300 * ($results[$ext][ps] / $max));
+				$w = round(300 * ($results[$ext]['ps'] / $max));
 
-				$col = ($results[$ext][ps] == $max) ? '#0c0' : '#9f9';
+				$col = ($results[$ext]['ps'] == $max) ? '#0c0' : '#9f9';
 
 				echo "<td align=\"left\"><div style=\"height: 30px; width: {$w}px; background-color: $col\"></div></td>";
 
